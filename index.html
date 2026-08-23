@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#1167ff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="UNO Matematika" />
+  <title>UNO Matematika</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { rounded: ['Nunito', 'ui-rounded', 'system-ui', 'sans-serif'] },
+          boxShadow: { soft: '0 18px 45px rgba(0,0,0,.22)', pop: '0 10px 0 rgba(0,0,0,.18), 0 20px 35px rgba(0,0,0,.22)' },
+          animation: { floaty: 'floaty 3s ease-in-out infinite', pulsePop: 'pulsePop 1.2s ease-in-out infinite', slideUp: 'slideUp .28s ease-out', cardDrop: 'cardDrop .35s cubic-bezier(.2,.9,.2,1)' },
+          keyframes: {
+            floaty: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+            pulsePop: { '0%,100%': { transform: 'scale(1)' }, '50%': { transform: 'scale(1.045)' } },
+            slideUp: { from: { transform: 'translateY(28px)', opacity: 0 }, to: { transform: 'translateY(0)', opacity: 1 } },
+            cardDrop: { from: { transform: 'translateY(-40px) rotate(-7deg)', opacity: 0 }, to: { transform: 'translateY(0) rotate(0)', opacity: 1 } }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+    :root { --vh: 1vh; --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
+    * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: #06133d; }
+    body { font-family: 'Nunito', ui-rounded, system-ui, sans-serif; }
+    .app-height { height: calc(var(--vh) * 100); }
+    .screen { position: absolute; inset: 0; opacity: 0; transform: translateX(18px) scale(.99); pointer-events: none; transition: opacity .26s ease, transform .26s ease; }
+    .screen.active { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; }
+    .glass { background: linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.09)); border: 1px solid rgba(255,255,255,.28); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 18px 45px rgba(3, 8, 35, .28); backdrop-filter: blur(16px); }
+    .btn { border-radius: 999px; min-height: 54px; font-weight: 900; color: white; text-shadow: 0 2px 0 rgba(0,0,0,.18); box-shadow: 0 9px 0 rgba(0,0,0,.18), 0 18px 28px rgba(0,0,0,.22); transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; display:flex; align-items:center; justify-content:center; gap:.55rem; }
+    .btn:active { transform: translateY(5px) scale(.985); box-shadow: 0 4px 0 rgba(0,0,0,.2), 0 10px 20px rgba(0,0,0,.18); filter: brightness(.98); }
+    .card { width: 62px; height: 92px; border-radius: 15px; border: 4px solid #fff; box-shadow: 0 8px 0 rgba(0,0,0,.25), 0 12px 25px rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; color: white; font-weight: 1000; position: relative; flex: 0 0 auto; user-select: none; }
+    .card::before { content:''; position:absolute; inset:9px; border-radius: 999px; background: rgba(255,255,255,.18); transform: rotate(-24deg); }
+    .card > span { position: relative; z-index: 1; font-size: 1.6rem; -webkit-text-stroke: 1.5px rgba(0,0,0,.45); text-shadow: 0 2px 0 rgba(0,0,0,.32); }
+    .card.small { width: 34px; height: 51px; border-radius: 9px; border-width: 2px; box-shadow: 0 4px 0 rgba(0,0,0,.25), 0 7px 12px rgba(0,0,0,.22); }
+    .card.small > span { font-size: .9rem; -webkit-text-stroke: .7px rgba(0,0,0,.4); }
+    .card.back { background: linear-gradient(135deg,#111827,#2563eb 40%,#ef4444 41%,#facc15 65%,#22c55e); }
+    .card.red { background: linear-gradient(145deg,#ff4c5b,#dc1635); }
+    .card.yellow { background: linear-gradient(145deg,#ffd646,#f59e0b); }
+    .card.green { background: linear-gradient(145deg,#35e877,#16a34a); }
+    .card.blue { background: linear-gradient(145deg,#34c4ff,#2563eb); }
+    .card.black { background: linear-gradient(145deg,#1f2937,#020617); }
+    .hand { display:flex; overflow-x:auto; overflow-y:visible; gap:8px; padding: 14px 18px 20px; scrollbar-width:none; scroll-snap-type:x proximity; }
+    .hand::-webkit-scrollbar{ display:none; }
+    .hand .card { scroll-snap-align:center; transition: transform .18s ease, filter .18s ease; }
+    .hand .card.playable { animation: pulsePop 1.4s ease-in-out infinite; outline: 3px solid rgba(255,255,255,.85); outline-offset: 2px; }
+    .hand .card:active { transform: translateY(-18px) scale(1.06) rotate(-2deg); }
+    .no-scrollbar { scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    /* Sparkle putih dinonaktifkan agar tidak muncul seperti kotak glitch di area logo/UI. */
+    .sparkle { display: none !important; }
+    .portrait-shell { width: min(100vw, 480px); height: 100%; margin:0 auto; position:relative; overflow:hidden; background: radial-gradient(circle at 20% 0%, #35d5ff 0%, transparent 28%), radial-gradient(circle at 92% 14%, #ff4e93 0%, transparent 24%), linear-gradient(160deg,#0e4cff 0%,#6717d1 52%,#06133d 100%); }
+    .soft-pattern::after { content:''; position:absolute; inset:0; pointer-events:none; opacity:.12; background-image: radial-gradient(circle at 12px 12px, #fff 2px, transparent 3px); background-size: 34px 34px; }
+    .hud-pill { border-radius:999px; background: rgba(7,13,44,.52); border:1px solid rgba(255,255,255,.22); backdrop-filter: blur(12px); }
+    .modal-backdrop { position:absolute; inset:0; background:rgba(2,6,23,.64); display:none; align-items:center; justify-content:center; padding:22px; z-index:50; }
+    .modal-backdrop.show { display:flex; }
+    .modal-card { width:100%; max-width:420px; animation: slideUp .25s ease-out; }
+    .shake { animation: shake .28s ease-in-out; }
+    @keyframes shake { 0%,100%{ transform:translateX(0) } 20%{ transform:translateX(-9px) } 40%{ transform:translateX(8px) } 60%{ transform:translateX(-6px) } 80%{ transform:translateX(5px) } }
+    .confetti { position:absolute; width:10px; height:14px; border-radius:3px; top:-18px; animation: fall 1.8s ease-in forwards; z-index:70; }
+    @keyframes fall { to { transform: translateY(110vh) rotate(560deg); opacity:0; } }
+  </style>
+</head>
+<body>
+  <main id="app" class="portrait-shell app-height soft-pattern text-white font-rounded select-none">
+    <!-- TOP HUD -->
+    <header class="absolute top-0 left-0 right-0 z-30 px-4 pt-[calc(var(--safe-top)+12px)] flex items-center justify-between">
+      <button id="backBtn" class="hud-pill hidden h-11 w-11 items-center justify-center text-xl">←</button>
+      <div class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black">
+        <span class="text-xl">💎</span><span id="diamondText">0</span>
+      </div>
+      <div class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black max-w-[170px]">
+        <span id="avatarText" class="text-xl">🐱</span><span id="nameText" class="truncate">Player</span>
+      </div>
+    </header>
+
+    <!-- MAIN MENU -->
+    <section id="menuScreen" class="screen active px-6 pt-[calc(var(--safe-top)+74px)] pb-[calc(var(--safe-bottom)+24px)] flex flex-col">
+      <div class="flex-1 flex flex-col items-center justify-center gap-4">
+        <img src="assets/logo-uno-matematic.png" alt="UNO Matematika" class="w-[82%] max-w-[330px] drop-shadow-[0_18px_24px_rgba(0,0,0,.45)] animate-floaty" draggable="false" />
+        <div class="glass rounded-[30px] p-4 w-full text-center">
+          <p class="text-sm opacity-90 font-extrabold">Belajar hitung sambil adu strategi kartu!</p>
+          <div class="mt-3 grid grid-cols-3 gap-2 text-xs font-black">
+            <div class="bg-white/15 rounded-2xl p-2">🔴 UNO</div><div class="bg-white/15 rounded-2xl p-2">🧮 Math</div><div class="bg-white/15 rounded-2xl p-2">🐾 Kawaii</div>
+          </div>
+        </div>
+      </div>
+      <nav class="grid gap-3">
+        <button class="btn bg-gradient-to-r from-lime-400 to-emerald-500 text-xl" data-nav="modeScreen">▶ Play</button>
+        <button class="btn bg-gradient-to-r from-fuchsia-400 to-pink-500" data-nav="shopScreen">🛍️ Shop Karakter</button>
+        <button class="btn bg-gradient-to-r from-amber-300 to-orange-500" data-nav="leaderboardScreen">🏆 Leaderboard</button>
+        <button class="btn bg-gradient-to-r from-sky-400 to-blue-600" data-nav="settingsScreen">⚙️ Settings</button>
+      </nav>
+    </section>
+
+
+    <!-- MODE -->
+    <section id="modeScreen" class="screen px-6 pt-[calc(var(--safe-top)+82px)] pb-8">
+      <h1 class="text-3xl font-black drop-shadow-lg">Mode Bermain</h1>
+      <p class="opacity-90 mt-1 font-bold">Pilih lawan AI atau main lokal bergantian di satu HP.</p>
+      <div class="mt-7 grid gap-3">
+        <button class="modeBtn btn bg-gradient-to-r from-indigo-400 to-blue-600 justify-between px-6" data-mode="ai" data-count="2"><span>🤖 Lawan AI</span><span>2 pemain</span></button>
+        <button class="modeBtn btn bg-gradient-to-r from-lime-400 to-emerald-500 justify-between px-6" data-mode="local" data-count="2"><span>👥 Mode 2 Pemain</span><span>Lokal</span></button>
+        <button class="modeBtn btn bg-gradient-to-r from-amber-300 to-orange-500 justify-between px-6" data-mode="local" data-count="3"><span>👨‍👩‍👧 Mode 3 Pemain</span><span>Lokal</span></button>
+        <button class="modeBtn btn bg-gradient-to-r from-fuchsia-400 to-pink-500 justify-between px-6" data-mode="local" data-count="4"><span>🎉 Mode 4 Pemain</span><span>Lokal</span></button>
+        <button id="customModeBtn" class="btn bg-gradient-to-r from-cyan-400 to-purple-600 justify-between px-6"><span>✨ Mode Custom</span><span>&gt; 4 pemain</span></button>
+      </div>
+      <div class="glass rounded-[28px] p-4 mt-7 text-sm leading-relaxed font-bold">
+        Mode lokal memakai sistem pass-and-play: setiap pemain bergantian memegang HP saat gilirannya. Mode AI tetap cocok untuk latihan sendiri.
+      </div>
+    </section>
+
+    <!-- DIFFICULTY -->
+    <section id="difficultyScreen" class="screen px-6 pt-[calc(var(--safe-top)+82px)] pb-8">
+      <h1 class="text-3xl font-black drop-shadow-lg">Pilih Level</h1>
+      <p class="opacity-90 mt-1 font-bold">Semakin sulit, hadiah Diamond Biru makin besar.</p>
+      <div class="mt-8 grid gap-4">
+        <button class="difficulty btn bg-gradient-to-r from-green-300 to-emerald-500 justify-between px-6" data-diff="easy"><span>🌱 Mudah</span><span>+5 💎</span></button>
+        <button class="difficulty btn bg-gradient-to-r from-yellow-300 to-orange-500 justify-between px-6" data-diff="medium"><span>⚡ Sedang</span><span>+15 💎</span></button>
+        <button class="difficulty btn bg-gradient-to-r from-red-400 to-purple-600 justify-between px-6" data-diff="hard"><span>🔥 Sulit</span><span>+30 💎</span></button>
+      </div>
+      <div class="glass rounded-[28px] p-4 mt-8 text-sm leading-relaxed font-bold">
+        Kartu aksi seperti Skip, Reverse, +2, Wild, dan +4 wajib membuka soal matematika. Jawab benar untuk mengaktifkan efek kartu dan mendapatkan Diamond.
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section id="gameScreen" class="screen flex flex-col pt-[calc(var(--safe-top)+58px)] pb-[calc(var(--safe-bottom)+0px)]">
+      <div class="px-4 flex items-center justify-between z-10">
+        <div class="hud-pill px-3 py-2 text-xs font-black">Level: <span id="levelText">Mudah</span></div>
+        <div id="turnText" class="hud-pill px-4 py-2 text-sm font-black bg-white/20">Giliranmu</div>
+        <button id="unoBtn" class="hud-pill px-3 py-2 text-xs font-black bg-red-500/80">UNO!</button>
+      </div>
+
+      <div class="flex-1 relative flex flex-col items-center justify-between py-2">
+        <div class="w-full px-4">
+          <div class="flex items-center justify-between mb-1">
+            <div id="opponentTitle" class="font-black text-sm">🤖 AI Koko</div><div class="text-sm font-black"><span id="aiCount">7</span> kartu</div>
+          </div>
+          <div id="aiHand" class="flex justify-center gap-1 h-[58px]"></div>
+        </div>
+
+        <div class="relative w-full flex-1 flex items-center justify-center min-h-[190px]">
+          <div class="absolute left-5 bottom-5 glass rounded-3xl p-3 text-center">
+            <div class="text-xs font-black opacity-80">Deck</div>
+            <button id="drawBtn" class="card back mt-1 active:scale-95"><span>UNO</span></button>
+          </div>
+          <div class="glass rounded-[34px] p-5 text-center min-w-[160px]">
+            <div class="text-xs font-black opacity-80 mb-2">Kartu Meja</div>
+            <div id="discardCard" class="card mx-auto animate-cardDrop"><span>?</span></div>
+            <div id="gameMsg" class="mt-3 text-sm font-black min-h-[22px]">Cocokkan warna atau angka.</div>
+          </div>
+          <div class="absolute right-4 bottom-4 glass rounded-2xl px-3 py-2 text-xs font-black text-center">
+            <div>Skor</div><div id="scoreText" class="text-lg">0</div>
+          </div>
+        </div>
+
+        <div class="w-full">
+          <div class="px-4 flex items-center justify-between">
+            <div class="font-black text-sm"><span id="playerAvatar">🐱</span> <span id="currentPlayerName">Kamu</span></div><div class="text-sm font-black"><span id="playerCount">7</span> kartu</div>
+          </div>
+          <div id="playerHand" class="hand"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SHOP -->
+    <section id="shopScreen" class="screen px-4 pt-[calc(var(--safe-top)+74px)] pb-[calc(var(--safe-bottom)+16px)] flex flex-col">
+      <h1 class="text-3xl font-black px-2">Shop Karakter</h1>
+      <p class="px-2 opacity-90 font-bold text-sm">Buka karakter kawaii pakai Diamond Biru.</p>
+      <div id="characterGrid" class="mt-4 grid grid-cols-2 gap-3 overflow-y-auto no-scrollbar pb-8"></div>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="leaderboardScreen" class="screen px-5 pt-[calc(var(--safe-top)+74px)] pb-8">
+      <h1 class="text-3xl font-black">Leaderboard</h1>
+      <p class="opacity-90 font-bold text-sm">Skor terbaik lokal + sinkron Firestore bila online.</p>
+      <div id="leaderboardList" class="mt-5 grid gap-3"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="settingsScreen" class="screen px-5 pt-[calc(var(--safe-top)+74px)] pb-8">
+      <h1 class="text-3xl font-black">Settings</h1>
+      <div class="glass rounded-[30px] p-5 mt-5 grid gap-4">
+        <label class="grid gap-2 font-black">Nama Pemain
+          <input id="playerNameInput" class="w-full rounded-2xl px-4 py-3 text-slate-900 outline-none" maxlength="18" placeholder="Nama kamu" />
+        </label>
+        <label class="flex items-center justify-between font-black bg-white/10 rounded-2xl p-3">Suara UI
+          <input id="soundToggle" type="checkbox" class="scale-150" checked />
+        </label>
+        <button id="saveSettings" class="btn bg-gradient-to-r from-cyan-400 to-blue-600">Simpan</button>
+        <button id="resetData" class="btn bg-gradient-to-r from-rose-400 to-red-600">Reset Data Lokal</button>
+      </div>
+      <div class="glass rounded-[24px] p-4 mt-4 text-xs font-bold leading-relaxed">
+        Status Firebase: <span id="firebaseStatus">menghubungkan...</span><br>
+        PWA: buka lewat server lokal/hosting HTTPS, lalu pilih “Add to Home Screen”.
+      </div>
+    </section>
+
+
+    <!-- CUSTOM PLAYER MODAL -->
+    <div id="customModal" class="modal-backdrop">
+      <div class="modal-card glass rounded-[34px] p-5 text-center">
+        <div class="text-5xl mb-2">✨</div>
+        <h2 class="text-2xl font-black">Mode Custom</h2>
+        <p class="text-sm opacity-90 font-bold mt-1">Masukkan jumlah pemain lokal, minimal 5 dan maksimal 8 agar kartu tetap nyaman di layar.</p>
+        <input id="customCountInput" type="number" min="5" max="8" value="5" class="mt-5 w-full rounded-2xl px-4 py-4 text-center text-3xl text-slate-900 font-black outline-none" />
+        <button id="startCustomMode" class="btn bg-gradient-to-r from-cyan-400 to-purple-600 mt-5">Lanjut Pilih Level</button>
+        <button id="cancelCustomMode" class="btn bg-gradient-to-r from-slate-400 to-slate-600 mt-3">Batal</button>
+      </div>
+    </div>
+
+    <!-- MATH MODAL -->
+    <div id="mathModal" class="modal-backdrop">
+      <div class="modal-card glass rounded-[34px] p-5 text-center">
+        <div class="text-5xl mb-2">🧮</div>
+        <h2 class="text-2xl font-black">Tantangan Matematika!</h2>
+        <p id="mathReward" class="text-sm opacity-90 font-bold mt-1">Jawab benar dapat 💎</p>
+        <div id="questionText" class="my-5 bg-white text-slate-900 rounded-[26px] py-5 px-4 text-4xl font-black shadow-pop">1 + 1 = ?</div>
+        <div id="answerGrid" class="grid grid-cols-2 gap-3"></div>
+      </div>
+    </div>
+
+    <!-- COLOR MODAL -->
+    <div id="colorModal" class="modal-backdrop">
+      <div class="modal-card glass rounded-[34px] p-5 text-center">
+        <h2 class="text-2xl font-black">Pilih Warna Wild</h2>
+        <div class="grid grid-cols-2 gap-3 mt-5">
+          <button class="colorPick btn bg-red-500" data-color="red">Merah</button>
+          <button class="colorPick btn bg-yellow-400" data-color="yellow">Kuning</button>
+          <button class="colorPick btn bg-green-500" data-color="green">Hijau</button>
+          <button class="colorPick btn bg-blue-500" data-color="blue">Biru</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- END MODAL -->
+    <div id="endModal" class="modal-backdrop">
+      <div class="modal-card glass rounded-[34px] p-5 text-center">
+        <div id="endEmoji" class="text-6xl">🏆</div>
+        <h2 id="endTitle" class="text-3xl font-black mt-2">Kamu Menang!</h2>
+        <p id="endDesc" class="font-bold opacity-90 mt-2">Hebat!</p>
+        <button id="playAgainBtn" class="btn bg-gradient-to-r from-lime-400 to-emerald-500 mt-5">Main Lagi</button>
+        <button id="endMenuBtn" class="btn bg-gradient-to-r from-sky-400 to-blue-600 mt-3">Menu Utama</button>
+      </div>
+    </div>
+  </main>
+
+<script type="module">
+  // ===================== FIREBASE INTEGRATION =====================
+  const firebaseConfig = {
+    apiKey: "AIzaSyCFxiHWdJxSfa4Fvl5kx3k18R_WIooKY4g",
+    authDomain: "uno-matematic.firebaseapp.com",
+    projectId: "uno-matematic",
+    storageBucket: "uno-matematic.firebasestorage.app",
+    messagingSenderId: "167668142033",
+    appId: "1:167668142033:web:4e5618695c45ed516a9af0"
+  };
+
+  let appFB, auth, db, userId = null, firebaseReady = false;
+  async function initFirebase() {
+    const status = $('#firebaseStatus');
+    try {
+      const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js');
+      const { getAuth, signInAnonymously, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
+      const { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, orderBy, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js');
+      window.fb = { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, orderBy, limit, getDocs };
+      appFB = initializeApp(firebaseConfig); auth = getAuth(appFB); db = getFirestore(appFB);
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          userId = user.uid; firebaseReady = true; status.textContent = 'online sebagai tamu ' + userId.slice(0, 6);
+          await loadCloudPlayer(); await saveCloudPlayer(); await renderLeaderboard();
+        }
+      });
+      await signInAnonymously(auth);
+    } catch (e) {
+      console.warn('Firebase unavailable:', e);
+      status.textContent = 'offline/demo mode (cek koneksi internet & aturan Firestore)';
+      firebaseReady = false;
+    }
+  }
+
+  // ===================== DATA =====================
+  const characters = [
+    // Karakter lama sekarang GRATIS semua.
+    { id:'kiko', name:'Kiko', gender:'Cowok Kucing', emoji:'🐱', price:0, power:'+ fokus warna biru' },
+    { id:'nami', name:'Nami', gender:'Cewek Kelinci', emoji:'🐰', price:0, power:'+ percaya diri' },
+    { id:'budi', name:'Budi', gender:'Cowok Beruang', emoji:'🐻', price:0, power:'bonus skor kecil' },
+    { id:'luna', name:'Luna', gender:'Cewek Peri', emoji:'🧚‍♀️', price:0, power:'aura lucky' },
+    { id:'raka', name:'Raka', gender:'Cowok Rubah', emoji:'🦊', price:0, power:'cepat hitung' },
+    { id:'mimi', name:'Mimi', gender:'Cewek Panda', emoji:'🐼', price:0, power:'tenang saat sulit' },
+    { id:'reno', name:'Reno', gender:'Cowok Naga', emoji:'🐲', price:0, power:'semangat +2' },
+    { id:'sora', name:'Sora', gender:'Cewek Bintang', emoji:'🌟', price:0, power:'bonus diamond' },
+    { id:'ario', name:'Ario', gender:'Cowok Penguin', emoji:'🐧', price:0, power:'cool strategy' },
+    { id:'hana', name:'Hana', gender:'Cewek Rubah Sakura', emoji:'🌸', price:0, power:'kawaii master' },
+    { id:'dimas', name:'Dimas', gender:'Cowok Singa', emoji:'🦁', price:0, power:'raja UNO' },
+    { id:'mei', name:'Mei', gender:'Cewek Unicorn', emoji:'🦄', price:0, power:'magic math' },
+
+    // 5 karakter PNG baru. Simpan gambar sesuai file ini di assets/characters/.
+    { id:'tora', name:'Tora', gender:'Cowok Harimau', emoji:'🐯', image:'assets/characters/tora.png', price:450, power:'Tiger combo + strategi agresif' },
+    { id:'aiko', name:'Aiko', gender:'Cewek Axolotl', emoji:'🩷', image:'assets/characters/aiko.png', price:450, power:'Calm math + lucky draw' },
+    { id:'kenzo', name:'Kenzo', gender:'Cowok Ninja Shiba', emoji:'🐶', image:'assets/characters/kenzo.png', price:550, power:'Ninja skip master' },
+    { id:'yuna', name:'Yuna', gender:'Cewek Penyihir Bulan', emoji:'🌙', image:'assets/characters/yuna.png', price:550, power:'Moon wild boost' },
+    { id:'nova', name:'Nova', gender:'Robot Bintang', emoji:'🤖', image:'assets/characters/nova.png', price:700, power:'Ultra logic calculation' },
+    { id:'astra', name:'Astra', gender:'Unisex Penjaga Galaksi', emoji:'🌌', image:'assets/characters/astra.png', price:1200, power:'Legendary cosmic math aura' }
+  ];
+  const rewards = { easy: 5, medium: 15, hard: 30 };
+  const diffName = { easy:'Mudah', medium:'Sedang', hard:'Sulit' };
+  const storageKey = 'uno-matematika-player-v1';
+  let player = JSON.parse(localStorage.getItem(storageKey) || 'null') || {
+    name: 'Player', diamonds: 0, score: 0, bestScore: 0, unlocked: ['kiko','nami'], selected: 'kiko', sound: true
+  };
+  // Migrasi: semua karakter lama gratis otomatis terbuka.
+  const freeCharacterIds = characters.filter(c => c.price === 0).map(c => c.id);
+  player.unlocked = [...new Set([...(player.unlocked || []), ...freeCharacterIds])];
+  let selectedMode = { type:'ai', count:2 };
+  let game = null;
+  let pendingMath = null;
+  let pendingWild = null;
+
+  // ===================== UTILS =====================
+  const $ = (q) => document.querySelector(q);
+  const $$ = (q) => [...document.querySelectorAll(q)];
+  const rnd = (n) => Math.floor(Math.random() * n);
+  const pick = (arr) => arr[rnd(arr.length)];
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const clamp = (x,min,max) => Math.max(min, Math.min(max, x));
+  function setVH(){ document.documentElement.style.setProperty('--vh', `${window.innerHeight * .01}px`); }
+  addEventListener('resize', setVH); setVH();
+  function toast(msg){ const el=$('#gameMsg'); if(el) el.textContent=msg; }
+  function vibrate(ms=20){ if(navigator.vibrate) navigator.vibrate(ms); }
+  // ===================== AUDIO MANAGER =====================
+  // Siapkan file audio Anda dengan nama berikut:
+  // assets/audio/menu-music.mp3, game-music.mp3, click.mp3, card.mp3,
+  // success.mp3, error.mp3, win.mp3, draw.mp3
+  const audio = {
+    unlocked: false,
+    currentMusic: null,
+    tracks: {
+      menu: new Audio('assets/audio/menu-music.mp3'),
+      game: new Audio('assets/audio/game-music.mp3')
+    },
+    sfx: {
+      click: new Audio('assets/audio/click.mp3'),
+      ok: new Audio('assets/audio/card.mp3'),
+      win: new Audio('assets/audio/win.mp3'),
+      bad: new Audio('assets/audio/error.mp3'),
+      success: new Audio('assets/audio/success.mp3'),
+      draw: new Audio('assets/audio/draw.mp3')
+    }
+  };
+  Object.values(audio.tracks).forEach(a => { a.loop = true; a.volume = .34; a.preload = 'auto'; });
+  Object.values(audio.sfx).forEach(a => { a.volume = .72; a.preload = 'auto'; });
+  function unlockAudio(){
+    if(audio.unlocked) return;
+    audio.unlocked = true;
+    Object.values(audio.tracks).forEach(a => { a.load(); });
+    Object.values(audio.sfx).forEach(a => { a.load(); });
+    setMusicForScreen($('.screen.active')?.id || 'menuScreen');
+  }
+  addEventListener('pointerdown', unlockAudio, { once:true });
+  function playSound(name='click'){
+    if(!player.sound || !audio.unlocked) return false;
+    const s = audio.sfx[name] || audio.sfx.click;
+    // Jika file belum tersedia/belum berhasil dimuat, gunakan fallback oscillator beep.
+    if(!s || s.readyState < 2) return false;
+    try { s.currentTime = 0; s.play().catch(()=>{}); return true; } catch { return false; }
+  }
+  function stopMusic(){
+    Object.values(audio.tracks).forEach(a => { try { a.pause(); a.currentTime = 0; } catch {} });
+    audio.currentMusic = null;
+  }
+  function setMusicForScreen(screenId){
+    if(!player.sound || !audio.unlocked) { stopMusic(); return; }
+    const target = screenId === 'gameScreen' ? audio.tracks.game : audio.tracks.menu;
+    if(audio.currentMusic === target && !target.paused) return;
+    Object.values(audio.tracks).forEach(a => { if(a !== target) a.pause(); });
+    audio.currentMusic = target;
+    target.play().catch(()=>{});
+  }
+  function beep(type='ok'){
+    const mapped = type === 'bad' ? 'bad' : type === 'win' ? 'win' : 'ok';
+    if(playSound(mapped)) return;
+    if(!player.sound) return;
+    try { const ac = new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(); const g=ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = type==='bad'?160:type==='win'?660:420; g.gain.value=.045; o.start(); o.stop(ac.currentTime+.08); } catch {}
+  }
+  function saveLocal(){ localStorage.setItem(storageKey, JSON.stringify(player)); renderHUD(); }
+  async function saveCloudPlayer(){
+    if(!firebaseReady || !userId) return;
+    try { await window.fb.setDoc(window.fb.doc(db,'players',userId), { ...player, uid:userId, updatedAt: window.fb.serverTimestamp() }, { merge:true }); }
+    catch(e){ console.warn('save cloud failed', e); }
+  }
+  async function loadCloudPlayer(){
+    if(!firebaseReady || !userId) return;
+    try {
+      const ref = window.fb.doc(db,'players',userId); const snap = await window.fb.getDoc(ref);
+      if(snap.exists()) { player = { ...player, ...snap.data() }; player.unlocked = [...new Set([...(player.unlocked || []), ...freeCharacterIds])]; saveLocal(); }
+    } catch(e){ console.warn('load cloud failed', e); }
+  }
+  function currentChar(){ return characters.find(c=>c.id===player.selected) || characters[0]; }
+  function charVisual(c, big=false){
+    const size = big ? 'text-5xl' : 'text-4xl';
+    if(c.image){
+      return `<div class="${big?'h-[96px]':'h-[58px]'} bg-white/15 rounded-[24px] flex items-center justify-center overflow-hidden">
+        <img src="${c.image}" alt="${c.name}" class="w-full h-full object-contain p-1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+        <div class="${size} hidden w-full h-full items-center justify-center">${c.emoji}</div>
+      </div>`;
+    }
+    return `<div class="${size} bg-white/15 rounded-[24px] py-4">${c.emoji}</div>`;
+  }
+  function renderHUD(){
+    $('#diamondText').textContent = player.diamonds;
+    $('#avatarText').textContent = currentChar().emoji;
+    $('#playerAvatar').textContent = currentChar().emoji;
+    $('#nameText').textContent = player.name;
+    $('#playerNameInput').value = player.name;
+    $('#soundToggle').checked = player.sound;
+  }
+  function confetti(){
+    for(let i=0;i<28;i++){ const d=document.createElement('div'); d.className='confetti'; d.style.left=rnd(100)+'%'; d.style.background=pick(['#22d3ee','#facc15','#fb7185','#4ade80','#fff']); d.style.animationDelay=(Math.random()*.35)+'s'; $('#app').appendChild(d); setTimeout(()=>d.remove(),2200); }
+  }
+
+  // ===================== NAV & MODE =====================
+  function showScreen(id){
+    $$('.screen').forEach(s=>s.classList.remove('active'));
+    $('#'+id).classList.add('active');
+    $('#backBtn').classList.toggle('hidden', id==='menuScreen');
+    $('#backBtn').classList.toggle('flex', id!=='menuScreen');
+    if(id==='shopScreen') renderShop();
+    if(id==='leaderboardScreen') renderLeaderboard();
+    setMusicForScreen(id);
+  }
+  document.addEventListener('click', (e) => {
+    const nav = e.target.closest('[data-nav]'); if(nav) showScreen(nav.dataset.nav);
+  });
+  document.addEventListener('pointerdown', (e) => {
+    if(e.target.closest('button, .card, input')) playSound('click');
+  });
+  $('#backBtn').addEventListener('click', ()=> showScreen('menuScreen'));
+  $$('.modeBtn').forEach(btn => btn.onclick = () => {
+    selectedMode = { type: btn.dataset.mode, count: Number(btn.dataset.count) };
+    showScreen('difficultyScreen');
+  });
+  $('#customModeBtn').onclick = () => $('#customModal').classList.add('show');
+  $('#cancelCustomMode').onclick = () => $('#customModal').classList.remove('show');
+  $('#startCustomMode').onclick = () => {
+    const count = clamp(Number($('#customCountInput').value || 5), 5, 8);
+    selectedMode = { type:'local', count };
+    $('#customModal').classList.remove('show');
+    showScreen('difficultyScreen');
+  };
+
+  // ===================== SHOP & LEADERBOARD =====================
+  function renderShop(){
+    $('#characterGrid').innerHTML = characters.map(c => {
+      const unlocked = player.unlocked.includes(c.id) || c.price === 0; const selected = player.selected===c.id; const canBuy = player.diamonds >= c.price;
+      return `<div class="glass rounded-[28px] p-3 text-center ${selected?'ring-4 ring-yellow-300':''}">
+        ${charVisual(c, true)}
+        <div class="font-black text-lg mt-2">${c.name}</div>
+        <div class="text-xs font-bold opacity-85">${c.gender}</div>
+        <div class="text-[11px] font-bold opacity-75 mt-1 min-h-[28px]">${c.power}</div>
+        <button class="characterBtn btn mt-3 min-h-[42px] text-sm ${unlocked?'bg-gradient-to-r from-cyan-400 to-blue-600':canBuy?'bg-gradient-to-r from-amber-300 to-orange-500':'bg-slate-500/70'}" data-id="${c.id}">
+          ${selected?'Dipakai ✅':unlocked?'Pakai':`Beli ${c.price} 💎`}
+        </button>
+      </div>`;
+    }).join('');
+    $$('.characterBtn').forEach(btn=>btn.onclick=async()=>{
+      const c = characters.find(x=>x.id===btn.dataset.id);
+      if(player.unlocked.includes(c.id) || c.price===0) { if(!player.unlocked.includes(c.id)) player.unlocked.push(c.id); player.selected = c.id; beep(); }
+      else if(player.diamonds >= c.price) { player.diamonds -= c.price; player.unlocked.push(c.id); player.selected = c.id; beep('win'); confetti(); }
+      else { beep('bad'); vibrate(60); btn.closest('.glass').classList.add('shake'); setTimeout(()=>btn.closest('.glass').classList.remove('shake'),300); }
+      saveLocal(); await saveCloudPlayer(); renderShop();
+    });
+  }
+  async function renderLeaderboard(){
+    const list = $('#leaderboardList');
+    let rows = [{ name: player.name+' (Kamu)', score: player.bestScore || 0, diamonds: player.diamonds, emoji: currentChar().emoji }];
+    if(firebaseReady){
+      try {
+        const q = window.fb.query(window.fb.collection(db,'players'), window.fb.orderBy('bestScore','desc'), window.fb.limit(8));
+        const snap = await window.fb.getDocs(q);
+        rows = snap.docs.map((d,i)=>{ const p=d.data(); const ch=characters.find(c=>c.id===p.selected)||characters[0]; return { name:p.name||'Player', score:p.bestScore||0, diamonds:p.diamonds||0, emoji:ch.emoji }; });
+      } catch(e){ console.warn('leaderboard failed', e); }
+    }
+    if(rows.length < 4) rows = rows.concat([
+      {name:'AI Koko', score:850, diamonds:190, emoji:'🤖'}, {name:'Nami Pro', score:720, diamonds:140, emoji:'🐰'}, {name:'Raka Math', score:610, diamonds:99, emoji:'🦊'}
+    ]);
+    list.innerHTML = rows.slice(0,8).map((r,i)=>`<div class="glass rounded-3xl p-4 flex items-center gap-3">
+      <div class="text-2xl font-black w-8">#${i+1}</div><div class="text-4xl">${r.emoji}</div><div class="flex-1"><div class="font-black">${r.name}</div><div class="text-xs opacity-85 font-bold">${r.diamonds} 💎</div></div><div class="font-black text-xl">${r.score}</div>
+    </div>`).join('');
+  }
+  $('#saveSettings').onclick = async()=>{ player.name = $('#playerNameInput').value.trim() || 'Player'; player.sound = $('#soundToggle').checked; saveLocal(); setMusicForScreen($('.screen.active')?.id || 'menuScreen'); await saveCloudPlayer(); beep(); };
+  $('#resetData').onclick = ()=>{ if(confirm('Reset Diamond, karakter, dan skor lokal?')){ localStorage.removeItem(storageKey); location.reload(); } };
+
+  // ===================== UNO ENGINE MULTI-PLAYER =====================
+  function buildDeck(){
+    const colors = ['red','yellow','green','blue']; const deck=[]; let id=0;
+    for(const color of colors){
+      deck.push({id:id++, color, type:'number', value:0, label:'0'});
+      for(let n=1;n<=9;n++){ deck.push({id:id++, color, type:'number', value:n, label:String(n)}, {id:id++, color, type:'number', value:n, label:String(n)}); }
+      for(const a of ['skip','reverse','draw2']) deck.push({id:id++, color, type:a, label:a==='draw2'?'+2':a==='skip'?'⊘':'↺'}, {id:id++, color, type:a, label:a==='draw2'?'+2':a==='skip'?'⊘':'↺'});
+    }
+    for(let i=0;i<4;i++) deck.push({id:id++, color:'black', type:'wild', label:'W'}, {id:id++, color:'black', type:'wild4', label:'+4'});
+    return shuffle(deck);
+  }
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=rnd(i+1); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function makePlayers(deck){
+    const chosen = currentChar();
+    const localNames = ['Pemain 1','Pemain 2','Pemain 3','Pemain 4','Pemain 5','Pemain 6','Pemain 7','Pemain 8'];
+    const emojis = [chosen.emoji,'🐰','🐻','🧚‍♀️','🦊','🐼','🐲','🌟'];
+    const count = clamp(selectedMode.count || 2, 2, 8);
+    return Array.from({length: count}, (_,i) => ({
+      name: i===0 ? player.name : (selectedMode.type==='ai' && i===1 ? 'AI Koko' : localNames[i]),
+      emoji: i===0 ? chosen.emoji : emojis[i % emojis.length],
+      ai: selectedMode.type==='ai' && i===1,
+      hand: deck.splice(0,7),
+      unoCalled: false
+    }));
+  }
+  function startGame(diff='easy'){
+    let deck = buildDeck(); let discard = deck.pop(); while(discard.color==='black'){ deck.unshift(discard); discard = deck.pop(); }
+    const players = makePlayers(deck);
+    game = { diff, mode:{...selectedMode}, deck, discard:[discard], currentColor:discard.color, players, turnIndex:0, direction:1, scoreThis:0, locked:false };
+    $('#levelText').textContent = diffName[diff]; showScreen('gameScreen'); renderGame(); toast(`${currentTurn().name}, mainkan kartu yang cocok!`);
+  }
+  $$('.difficulty').forEach(btn=>btn.onclick=()=>startGame(btn.dataset.diff));
+  function currentTurn(){ return game.players[game.turnIndex]; }
+  function nextIndex(steps=1){ const n=game.players.length; return (game.turnIndex + game.direction*steps + n*10) % n; }
+  function topCard(){ return game.discard[game.discard.length-1]; }
+  function isPlayable(card){ const top=topCard(); return card.color==='black' || card.color===game.currentColor || (card.type==='number' && top.type==='number' && card.value===top.value) || (card.type===top.type && card.type!=='number'); }
+  function cardHtml(card, small=false){ return `<div class="card ${card.color==='black'?'black':card.color} ${small?'small':''}" data-id="${card.id}"><span>${card.label}</span></div>`; }
+  function renderGame(){
+    if(!game) return;
+    const cur = currentTurn();
+    const opponents = game.players.map((p,i)=>({p,i})).filter(x=>x.i!==game.turnIndex);
+    $('#opponentTitle').textContent = game.mode.type==='ai' ? '🤖 Lawan AI' : `👥 ${game.players.length} Pemain Lokal`;
+    $('#aiCount').textContent = opponents.reduce((sum,x)=>sum+x.p.hand.length,0);
+    $('#playerCount').textContent = cur.hand.length; $('#scoreText').textContent = game.scoreThis;
+    $('#currentPlayerName').textContent = cur.ai ? cur.name : (game.mode.type==='local' ? cur.name : 'Kamu');
+    $('#playerAvatar').textContent = cur.emoji;
+    $('#turnText').textContent = cur.ai ? 'Giliran AI' : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`;
+    $('#turnText').classList.toggle('bg-emerald-500/50', !cur.ai);
+    $('#aiHand').innerHTML = opponents.map(({p,i})=>`<div class="glass rounded-2xl px-2 py-1 min-w-[64px] text-center"><div class="text-lg">${p.emoji}</div><div class="text-[10px] font-black truncate">${p.name}</div><div class="flex justify-center gap-[2px] mt-1">${p.hand.slice(0,5).map(()=>'<div class="card small back"><span></span></div>').join('')}</div><div class="text-[10px] font-black mt-1">${p.hand.length} kartu</div></div>`).join('');
+    const t=topCard(); const discard=$('#discardCard'); discard.className=`card ${t.color==='black'?'black':game.currentColor} mx-auto animate-cardDrop`; discard.innerHTML=`<span>${t.label}</span>`;
+    $('#playerHand').innerHTML = cur.hand.map(c=>{ const play = !cur.ai && isPlayable(c); return cardHtml(c).replace('class="card','class="card '+(play?'playable ':'')).replace(`data-id="${c.id}"`, `data-id="${c.id}" role="button" aria-label="Kartu ${c.label}"`); }).join('');
+    $$('#playerHand .card').forEach(el => el.onclick = () => onHumanCard(Number(el.dataset.id)));
+  }
+  function drawOne(pIndex){
+    if(game.deck.length < 5){ const keep=game.discard.pop(); game.deck = shuffle(game.discard); game.discard=[keep]; }
+    const card = game.deck.pop(); game.players[pIndex].hand.push(card); return card;
+  }
+  $('#drawBtn').onclick = async()=>{
+    if(!game || game.locked || currentTurn().ai) return;
+    const c = drawOne(game.turnIndex); renderGame(); toast(`${currentTurn().name} ambil kartu ${c.label}.`); playSound('draw') || beep(); await endTurn(1);
+  };
+  $('#unoBtn').onclick = ()=>{
+    if(game && currentTurn().hand.length<=2){ currentTurn().unoCalled=true; toast(`${currentTurn().name}: UNO!`); beep('win'); vibrate(30); }
+    else toast('Belum waktunya UNO 😄');
+  };
+  async function onHumanCard(id){
+    if(game.locked || currentTurn().ai) return;
+    const pIndex = game.turnIndex; const hand = game.players[pIndex].hand;
+    const idx = hand.findIndex(c=>c.id===id); const card=hand[idx]; if(!card) return;
+    if(!isPlayable(card)){ toast('Kartu belum cocok. Pilih warna/angka yang sama.'); beep('bad'); vibrate(50); return; }
+    const needsMath = card.type !== 'number' || Math.random() < ({easy:.12, medium:.2, hard:.32}[game.diff]);
+    const play = async()=>{
+      if(card.color==='black'){ pendingWild = { pIndex, idx }; showColorModal(); }
+      else await playCard(pIndex, idx, card.color);
+    };
+    if(needsMath) askMath(game.diff, async(correct)=>{ if(correct) await play(); else { toast('Jawaban salah! Kartu batal, giliran lewat.'); await endTurn(1); } });
+    else await play();
+  }
+  async function playCard(pIndex, idx, chosenColor=null){
+    game.locked = true;
+    const p = game.players[pIndex];
+    const card = p.hand.splice(idx,1)[0];
+    game.discard.push(card); if(chosenColor) game.currentColor = chosenColor; else if(card.color!=='black') game.currentColor=card.color;
+    if(!p.ai) game.scoreThis += card.type==='number'?10:25;
+    // Jika pemain sudah menekan UNO sebelum membuang kartu kedua-terakhir, pertahankan statusnya.
+    // Kalau jumlah kartu bukan 1, reset status UNO untuk giliran berikutnya.
+    p.unoCalled = p.hand.length === 1 ? p.unoCalled : false;
+    beep(card.type==='number'?'ok':'win'); renderGame();
+    const steps = await applyAction(card, pIndex);
+    if(checkWin(pIndex)) return;
+    await endTurn(steps);
+  }
+  async function applyAction(card, pIndex){
+    let steps = 1;
+    const target = nextIndex(1);
+    if(card.type==='reverse'){
+      game.direction *= -1;
+      steps = game.players.length === 2 ? 2 : 1;
+      toast(game.players.length===2 ? 'Reverse! Lawan dilewati.' : 'Reverse! Arah permainan berbalik.'); await sleep(650);
+    }
+    if(card.type==='skip') { steps = 2; toast(`Skip! ${game.players[target].name} dilewati.`); await sleep(650); }
+    if(card.type==='draw2') { drawOne(target); drawOne(target); steps = 2; toast(`${game.players[target].name} ambil 2 kartu dan dilewati!`); await sleep(650); }
+    if(card.type==='wild4') { for(let i=0;i<4;i++) drawOne(target); steps = 2; toast(`${game.players[target].name} ambil 4 kartu dan dilewati!`); await sleep(650); }
+    return steps;
+  }
+  async function endTurn(steps=1){
+    if(!game) return;
+    game.turnIndex = nextIndex(steps);
+    game.locked = false; renderGame();
+    const cur = currentTurn();
+    if(cur.ai) { await sleep(850); aiMove(); }
+    else toast(`${cur.name}, giliranmu.`);
+  }
+  function checkWin(pIndex){
+    const p = game.players[pIndex];
+    if(p.hand.length===1 && !p.unoCalled){ toast(`${p.name} lupa UNO! Penalti ambil 2 kartu.`); drawOne(pIndex); drawOne(pIndex); renderGame(); return false; }
+    if(p.hand.length===0){ endGame(pIndex); return true; }
+    return false;
+  }
+  async function aiMove(){
+    if(!game || !currentTurn().ai) return;
+    game.locked = true; const pIndex=game.turnIndex; const ai=currentTurn(); toast(`${ai.name} sedang berpikir...`); await sleep(700);
+    let idx = ai.hand.findIndex(isPlayable);
+    if(idx<0){ drawOne(pIndex); toast(`${ai.name} mengambil kartu.`); playSound('draw'); renderGame(); await sleep(650); await endTurn(1); return; }
+    const card = ai.hand[idx]; let chosen = card.color;
+    if(card.color==='black') chosen = bestAIColor(ai.hand);
+    if(card.type!=='number' && Math.random() > .75){ toast(`${ai.name} salah menjawab soal!`); game.locked=false; await endTurn(1); return; }
+    await playCard(pIndex, idx, chosen);
+  }
+  function bestAIColor(hand){ const counts={red:0,yellow:0,green:0,blue:0}; hand.forEach(c=>{ if(counts[c.color]!=null) counts[c.color]++; }); return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0]; }
+  function endGame(winnerIndex){
+    const winner = game.players[winnerIndex]; const humanWin = !winner.ai && winnerIndex===0;
+    beep(humanWin?'win':'bad'); if(!winner.ai) confetti();
+    const bonus = !winner.ai ? 100 : 25; player.score += game.scoreThis + bonus; player.bestScore = Math.max(player.bestScore||0, game.scoreThis+bonus);
+    saveLocal(); saveCloudPlayer();
+    $('#endEmoji').textContent = !winner.ai ? '🏆' : '💪';
+    $('#endTitle').textContent = `${winner.name} Menang!`;
+    $('#endDesc').textContent = !winner.ai ? `Skor ronde ${game.scoreThis+bonus}. UNO + matematika makin jago!` : `AI menang kali ini. Skor ronde ${game.scoreThis}.`;
+    $('#endModal').classList.add('show');
+  }
+  $('#playAgainBtn').onclick = ()=>{ $('#endModal').classList.remove('show'); startGame(game?.diff||'easy'); };
+  $('#endMenuBtn').onclick = ()=>{ $('#endModal').classList.remove('show'); showScreen('menuScreen'); };
+
+  // ===================== MATH CHALLENGE =====================
+  function makeQuestion(diff){
+    let q, ans;
+    if(diff==='easy'){
+      const a=rnd(16)+2, b=rnd(12)+1, op=pick(['+','-']); ans = op==='+'?a+b:a-b; q=`${a} ${op} ${b}`;
+    } else if(diff==='medium'){
+      const op=pick(['+','-','×']); const a=rnd(31)+8, b=rnd(12)+3; ans = op==='+'?a+b:op==='-'?a-b:a*b; q=`${a} ${op} ${b}`;
+    } else {
+      const kind=rnd(3);
+      if(kind===0){ const a=rnd(19)+12,b=rnd(12)+6; ans=a*b; q=`${a} × ${b}`; }
+      else if(kind===1){ const b=rnd(11)+4, ans0=rnd(20)+6; ans=ans0; q=`${b*ans0} ÷ ${b}`; }
+      else { const a=rnd(12)+5,b=rnd(9)+2,c=rnd(30)+10; ans=(a+b)*c; q=`(${a} + ${b}) × ${c}`; }
+    }
+    const options = new Set([ans]); while(options.size<4){ const delta = rnd(diff==='hard'?40:18)- (diff==='hard'?20:9); if(delta!==0) options.add(ans+delta); }
+    return { q, ans, options: shuffle([...options]) };
+  }
+  function askMath(diff, cb){
+    pendingMath = cb; const m = makeQuestion(diff); $('#questionText').textContent = `${m.q} = ?`; $('#mathReward').textContent = `Jawab benar dapat ${rewards[diff]} 💎 Biru`;
+    $('#answerGrid').innerHTML = m.options.map(o=>`<button class="answerBtn btn bg-gradient-to-r from-white to-slate-200 text-slate-900 text-2xl" data-v="${o}">${o}</button>`).join('');
+    $$('.answerBtn').forEach(btn=>btn.onclick=async()=>{
+      const ok = Number(btn.dataset.v)===m.ans;
+      if(ok){ player.diamonds += rewards[diff]; game.scoreThis += rewards[diff]*2; saveLocal(); saveCloudPlayer(); playSound('success') || beep('win'); confetti(); }
+      else { beep('bad'); vibrate(90); btn.classList.add('shake'); }
+      $('#mathModal').classList.remove('show'); const fn=pendingMath; pendingMath=null; fn(ok); renderGame();
+    });
+    $('#mathModal').classList.add('show');
+  }
+  function showColorModal(){ $('#colorModal').classList.add('show'); }
+  $$('.colorPick').forEach(btn=>btn.onclick=async()=>{
+    $('#colorModal').classList.remove('show'); const p=pendingWild; pendingWild=null; if(p) await playCard(p.pIndex, p.idx, btn.dataset.color);
+  });
+
+  // ===================== BOOT =====================
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(console.warn); }
+  renderHUD(); renderShop(); renderLeaderboard(); initFirebase();
+</script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f75b64e93ace8b',t:'MTc4NzQ1OTE2NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+</body>
+</html>
