@@ -248,6 +248,7 @@
           <div class="bg-white/12 rounded-2xl p-3">🏁 <b>Menang ronde:</b> pemain yang paling dulu menghabiskan semua kartu di tangan menjadi pemenang.</div>
           <div class="bg-white/12 rounded-2xl p-3">🔊 <b>UNO:</b> saat kartu tinggal 1, popup BILANG UNO muncul. Tekan tombol UNO/HUD sebelum waktu habis. Kalau lupa, terkena penalti ambil 2 kartu.</div>
           <div class="bg-white/12 rounded-2xl p-3">🧮 <b>Matematika:</b> kartu aksi wajib menjawab soal. Benar = kartu aktif + dapat Diamond. Salah = kartu batal dan giliran lewat.</div>
+          <div class="bg-white/12 rounded-2xl p-3">🙈 <b>Privasi kartu:</b> pada mode lokal, setiap pergantian giliran akan muncul layar Pass HP sehingga kartu pemain berikutnya tidak terlihat lawan.</div>
           <div class="bg-white/12 rounded-2xl p-3">🏅 <b>Ranking:</b> naik rank dari skor terbaik dan total skor. Semakin sering menang dan benar menjawab soal, rank semakin tinggi.</div>
         </div>
         <button id="closeRulesBtn" class="btn bg-gradient-to-r from-cyan-400 to-blue-600 mt-5">Mengerti</button>
@@ -290,6 +291,19 @@
       </div>
     </div>
 
+
+
+    <!-- PASS TURN PRIVACY MODAL -->
+    <div id="passModal" class="modal-backdrop">
+      <div class="modal-card glass rounded-[34px] p-5 text-center">
+        <div class="text-6xl mb-2">🙈</div>
+        <h2 class="text-2xl font-black">Giliran Berikutnya</h2>
+        <p class="text-sm opacity-90 font-bold mt-2">Kartu disembunyikan agar pemain sebelumnya tidak bisa melihat kartu lawan.</p>
+        <div id="passPlayerText" class="my-5 bg-white text-slate-900 rounded-[26px] py-5 px-4 text-2xl font-black shadow-pop">Pemain 2</div>
+        <p class="text-xs opacity-80 font-bold">Berikan HP ke pemain ini, lalu tekan tombol siap.</p>
+        <button id="readyTurnBtn" class="btn bg-gradient-to-r from-lime-400 to-emerald-500 mt-5 text-xl">✅ Saya Siap</button>
+      </div>
+    </div>
 
     <!-- UNO PROMPT MODAL -->
     <div id="unoPromptModal" class="modal-backdrop">
@@ -638,7 +652,7 @@
   function startGame(diff='easy'){
     let deck = buildDeck(); let discard = deck.pop(); while(discard.color==='black'){ deck.unshift(discard); discard = deck.pop(); }
     const players = makePlayers(deck);
-    game = { diff, mode:{...selectedMode}, deck, discard:[discard], currentColor:discard.color, players, turnIndex:0, direction:1, scoreThis:0, locked:false };
+    game = { diff, mode:{...selectedMode}, deck, discard:[discard], currentColor:discard.color, players, turnIndex:0, direction:1, scoreThis:0, locked:false, privacy:false };
     $('#levelText').textContent = diffName[diff]; showScreen('gameScreen'); renderGame(); toast(`${currentTurn().name}, mainkan kartu yang cocok!`);
   }
   $$('.difficulty').forEach(btn=>btn.onclick=()=>startGame(btn.dataset.diff));
@@ -650,26 +664,31 @@
   function renderGame(){
     if(!game) return;
     const cur = currentTurn();
+    const privacy = !!(game.privacy && game.mode.type === 'local' && !cur.ai);
     const opponents = game.players.map((p,i)=>({p,i})).filter(x=>x.i!==game.turnIndex);
     $('#opponentTitle').textContent = game.mode.type==='ai' ? '🤖 Lawan AI' : `👥 ${game.players.length} Pemain Lokal`;
     $('#aiCount').textContent = opponents.reduce((sum,x)=>sum+x.p.hand.length,0);
     $('#playerCount').textContent = cur.hand.length; $('#scoreText').textContent = game.scoreThis;
-    $('#currentPlayerName').textContent = cur.ai ? cur.name : (game.mode.type==='local' ? cur.name : 'Kamu');
+    $('#currentPlayerName').textContent = privacy ? 'Kartu terkunci' : (cur.ai ? cur.name : (game.mode.type==='local' ? cur.name : 'Kamu'));
     $('#playerAvatar').textContent = cur.emoji;
-    $('#turnText').textContent = cur.ai ? 'Giliran AI' : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`;
+    $('#turnText').textContent = privacy ? 'Pass HP' : (cur.ai ? 'Giliran AI' : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`);
     $('#turnText').classList.toggle('bg-emerald-500/50', !cur.ai);
     $('#unoBtn').classList.toggle('uno-hot', !cur.ai && cur.hand.length <= 2);
     $('#aiHand').innerHTML = opponents.map(({p,i})=>`<div class="glass rounded-2xl px-2 py-1 min-w-[64px] text-center"><div class="text-lg">${p.emoji}</div><div class="text-[10px] font-black truncate">${p.name}</div><div class="flex justify-center gap-[2px] mt-1">${p.hand.slice(0,5).map(()=>'<div class="card small back"><span></span></div>').join('')}</div><div class="text-[10px] font-black mt-1">${p.hand.length} kartu</div></div>`).join('');
     const t=topCard(); const discard=$('#discardCard'); discard.className=`card ${t.color==='black'?'black':game.currentColor} mx-auto animate-cardDrop`; discard.innerHTML=`<span>${t.label}</span>`;
-    $('#playerHand').innerHTML = cur.hand.map(c=>{ const play = !cur.ai && isPlayable(c); return cardHtml(c).replace('class="card','class="card '+(play?'playable ':'')).replace(`data-id="${c.id}"`, `data-id="${c.id}" role="button" aria-label="Kartu ${c.label}"`); }).join('');
-    $$('#playerHand .card').forEach(el => el.onclick = () => onHumanCard(Number(el.dataset.id)));
+    if(privacy){
+      $('#playerHand').innerHTML = cur.hand.map(()=>'<div class="card back"><span>?</span></div>').join('');
+    } else {
+      $('#playerHand').innerHTML = cur.hand.map(c=>{ const play = !cur.ai && isPlayable(c); return cardHtml(c).replace('class="card','class="card '+(play?'playable ':'')).replace(`data-id="${c.id}"`, `data-id="${c.id}" role="button" aria-label="Kartu ${c.label}"`); }).join('');
+      $$('#playerHand .card').forEach(el => el.onclick = () => onHumanCard(Number(el.dataset.id)));
+    }
   }
   function drawOne(pIndex){
     if(game.deck.length < 5){ const keep=game.discard.pop(); game.deck = shuffle(game.discard); game.discard=[keep]; }
     const card = game.deck.pop(); game.players[pIndex].hand.push(card); return card;
   }
   $('#drawBtn').onclick = async()=>{
-    if(!game || game.locked || currentTurn().ai) return;
+    if(!game || game.locked || game.privacy || currentTurn().ai) return;
     const c = drawOne(game.turnIndex); renderGame(); toast(`${currentTurn().name} ambil kartu ${c.label}.`); playSound('draw') || beep(); await endTurn(1);
   };
   $('#unoBtn').onclick = ()=>{
@@ -681,7 +700,7 @@
     else toast('Belum waktunya UNO 😄');
   };
   async function onHumanCard(id){
-    if(game.locked || currentTurn().ai) return;
+    if(game.locked || game.privacy || currentTurn().ai) return;
     const pIndex = game.turnIndex; const hand = game.players[pIndex].hand;
     const idx = hand.findIndex(c=>c.id===id); const card=hand[idx]; if(!card) return;
     if(!isPlayable(card)){ toast('Kartu belum cocok. Pilih warna/angka yang sama.'); beep('bad'); vibrate(50); return; }
@@ -753,8 +772,18 @@
   async function endTurn(steps=1){
     if(!game) return;
     game.turnIndex = nextIndex(steps);
-    game.locked = false; renderGame();
     const cur = currentTurn();
+    if(game.mode.type === 'local' && !cur.ai){
+      game.privacy = true;
+      game.locked = true;
+      renderGame();
+      $('#passPlayerText').textContent = `${cur.emoji} ${cur.name}`;
+      $('#passModal').classList.add('show');
+      toast(`Berikan HP ke ${cur.name}. Kartu masih terkunci.`);
+      return;
+    }
+    game.privacy = false;
+    game.locked = false; renderGame();
     if(cur.ai) { await sleep(850); aiMove(); }
     else toast(`${cur.name}, giliranmu.`);
   }
@@ -814,6 +843,15 @@
     });
     $('#mathModal').classList.add('show');
   }
+  $('#readyTurnBtn').addEventListener('click', () => {
+    if(!game) return;
+    $('#passModal').classList.remove('show');
+    game.privacy = false;
+    game.locked = false;
+    renderGame();
+    toast(`${currentTurn().name}, giliranmu. Lawan tidak bisa melihat kartumu.`);
+    beep();
+  });
   function showColorModal(){ $('#colorModal').classList.add('show'); }
   $$('.colorPick').forEach(btn=>btn.onclick=async()=>{
     $('#colorModal').classList.remove('show'); const p=pendingWild; pendingWild=null; if(p) await playCard(p.pIndex, p.idx, btn.dataset.color);
@@ -823,6 +861,6 @@
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(console.warn); }
   renderHUD(); renderShop(); renderLeaderboard(); initFirebase(); setTimeout(()=>{ if(!player.nameSet) openProfile(); }, 800);
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8591d5a1b243f',t:'MTc4NzQ2OTU1Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f88c7e38b5b00b',t:'MTc4NzQ3MTY2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+</body>
 </html>
