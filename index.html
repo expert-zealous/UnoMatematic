@@ -74,6 +74,8 @@
     @keyframes shake { 0%,100%{ transform:translateX(0) } 20%{ transform:translateX(-9px) } 40%{ transform:translateX(8px) } 60%{ transform:translateX(-6px) } 80%{ transform:translateX(5px) } }
     .confetti { position:absolute; width:10px; height:14px; border-radius:3px; top:-18px; animation: fall 1.8s ease-in forwards; z-index:70; }
     @keyframes fall { to { transform: translateY(110vh) rotate(560deg); opacity:0; } }
+    .firework-dot { position:absolute; width:8px; height:8px; border-radius:999px; z-index:80; pointer-events:none; box-shadow:0 0 14px currentColor; animation: explode .9s ease-out forwards; }
+    @keyframes explode { from { transform: translate(0,0) scale(1); opacity:1; } to { transform: translate(var(--dx), var(--dy)) scale(.15); opacity:0; } }
   </style>
 </head>
 <body>
@@ -84,9 +86,9 @@
       <div class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black">
         <span class="text-xl">💎</span><span id="diamondText">0</span>
       </div>
-      <div class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black max-w-[170px]">
-        <span id="avatarText" class="text-xl">🐱</span><span id="nameText" class="truncate">Player</span>
-      </div>
+      <button id="profilePill" class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black max-w-[190px] active:scale-95">
+        <span id="avatarText" class="text-xl">🐱</span><span id="nameText" class="truncate">Player</span> <span id="rankMini" class="text-[10px] bg-yellow-300/25 rounded-full px-2 py-1">Rookie</span>
+      </button>
     </header>
 
     <!-- MAIN MENU -->
@@ -95,15 +97,18 @@
         <img src="assets/logo-uno-matematic.png" alt="UNO Matematika" class="w-[82%] max-w-[330px] drop-shadow-[0_18px_24px_rgba(0,0,0,.45)] animate-floaty" draggable="false" />
         <div class="glass rounded-[30px] p-4 w-full text-center">
           <p class="text-sm opacity-90 font-extrabold">Belajar hitung sambil adu strategi kartu!</p>
+          <div class="mt-2 inline-flex items-center gap-2 bg-yellow-300/20 border border-yellow-200/30 rounded-full px-3 py-1 text-xs font-black">🏅 Rank: <span id="menuRankText">Rookie</span></div>
           <div class="mt-3 grid grid-cols-3 gap-2 text-xs font-black">
             <div class="bg-white/15 rounded-2xl p-2">🔴 UNO</div><div class="bg-white/15 rounded-2xl p-2">🧮 Math</div><div class="bg-white/15 rounded-2xl p-2">🐾 Kawaii</div>
           </div>
         </div>
       </div>
       <nav class="grid gap-3">
+        <button id="loginMenuBtn" class="btn bg-gradient-to-r from-violet-400 to-indigo-600">👤 Login / Nama Pemain</button>
         <button class="btn bg-gradient-to-r from-lime-400 to-emerald-500 text-xl" data-nav="modeScreen">▶ Play</button>
         <button class="btn bg-gradient-to-r from-fuchsia-400 to-pink-500" data-nav="shopScreen">🛍️ Shop Karakter</button>
         <button class="btn bg-gradient-to-r from-amber-300 to-orange-500" data-nav="leaderboardScreen">🏆 Leaderboard</button>
+        <button id="rulesBtn" class="btn bg-gradient-to-r from-cyan-400 to-teal-500">📜 Aturan Menang</button>
         <button class="btn bg-gradient-to-r from-sky-400 to-blue-600" data-nav="settingsScreen">⚙️ Settings</button>
       </nav>
     </section>
@@ -212,6 +217,38 @@
       </div>
     </section>
 
+
+
+    <!-- PROFILE / LOGIN MODAL -->
+    <div id="profileModal" class="modal-backdrop">
+      <div class="modal-card glass rounded-[34px] p-5 text-center">
+        <div class="text-5xl mb-2">👤</div>
+        <h2 class="text-2xl font-black">Login Pemain</h2>
+        <p class="text-sm opacity-90 font-bold mt-1">Masukkan nama pemain agar skor, Diamond, karakter, dan ranking tersimpan.</p>
+        <input id="loginNameInput" class="mt-5 w-full rounded-2xl px-4 py-4 text-center text-2xl text-slate-900 font-black outline-none" maxlength="18" placeholder="Nama pemain" />
+        <div class="mt-4 glass rounded-2xl p-3 text-sm font-black">
+          <div>🏅 Rank saat ini: <span id="profileRankText">Rookie</span></div>
+          <div class="text-xs opacity-85 mt-1">Best Score: <span id="profileBestText">0</span> • Total Skor: <span id="profileScoreText">0</span></div>
+        </div>
+        <button id="saveProfileBtn" class="btn bg-gradient-to-r from-lime-400 to-emerald-500 mt-5">Mulai Bermain</button>
+        <button id="closeProfileBtn" class="btn bg-gradient-to-r from-slate-400 to-slate-600 mt-3">Tutup</button>
+      </div>
+    </div>
+
+    <!-- RULES MODAL -->
+    <div id="rulesModal" class="modal-backdrop">
+      <div class="modal-card glass rounded-[34px] p-5">
+        <div class="text-center text-5xl mb-2">📜</div>
+        <h2 class="text-2xl font-black text-center">Cara Menang</h2>
+        <div class="mt-4 grid gap-3 text-sm font-bold leading-relaxed">
+          <div class="bg-white/12 rounded-2xl p-3">🏁 <b>Menang ronde:</b> pemain yang paling dulu menghabiskan semua kartu di tangan menjadi pemenang.</div>
+          <div class="bg-white/12 rounded-2xl p-3">🔊 <b>UNO:</b> saat kartu tinggal 1, tekan tombol UNO. Kalau lupa, terkena penalti ambil 2 kartu.</div>
+          <div class="bg-white/12 rounded-2xl p-3">🧮 <b>Matematika:</b> kartu aksi wajib menjawab soal. Benar = kartu aktif + dapat Diamond. Salah = kartu batal dan giliran lewat.</div>
+          <div class="bg-white/12 rounded-2xl p-3">🏅 <b>Ranking:</b> naik rank dari skor terbaik dan total skor. Semakin sering menang dan benar menjawab soal, rank semakin tinggi.</div>
+        </div>
+        <button id="closeRulesBtn" class="btn bg-gradient-to-r from-cyan-400 to-blue-600 mt-5">Mengerti</button>
+      </div>
+    </div>
 
     <!-- CUSTOM PLAYER MODAL -->
     <div id="customModal" class="modal-backdrop">
@@ -323,11 +360,12 @@
   const diffName = { easy:'Mudah', medium:'Sedang', hard:'Sulit' };
   const storageKey = 'uno-matematika-player-v1';
   let player = JSON.parse(localStorage.getItem(storageKey) || 'null') || {
-    name: 'Player', diamonds: 0, score: 0, bestScore: 0, unlocked: ['kiko','nami'], selected: 'kiko', sound: true
+    name: 'Player', nameSet: false, diamonds: 0, score: 0, bestScore: 0, unlocked: ['kiko','nami'], selected: 'kiko', sound: true
   };
   // Migrasi: semua karakter lama gratis otomatis terbuka.
   const freeCharacterIds = characters.filter(c => c.price === 0).map(c => c.id);
   player.unlocked = [...new Set([...(player.unlocked || []), ...freeCharacterIds])];
+  if(player.nameSet == null) player.nameSet = !!(player.name && player.name !== 'Player');
   let selectedMode = { type:'ai', count:2 };
   let game = null;
   let pendingMath = null;
@@ -409,10 +447,32 @@
     if(!firebaseReady || !userId) return;
     try {
       const ref = window.fb.doc(db,'players',userId); const snap = await window.fb.getDoc(ref);
-      if(snap.exists()) { player = { ...player, ...snap.data() }; player.unlocked = [...new Set([...(player.unlocked || []), ...freeCharacterIds])]; saveLocal(); }
+      if(snap.exists()) { player = { ...player, ...snap.data() }; player.unlocked = [...new Set([...(player.unlocked || []), ...freeCharacterIds])];
+  if(player.nameSet == null) player.nameSet = !!(player.name && player.name !== 'Player'); saveLocal(); }
     } catch(e){ console.warn('load cloud failed', e); }
   }
   function currentChar(){ return characters.find(c=>c.id===player.selected) || characters[0]; }
+  function getRank(score = Math.max(player.bestScore || 0, Math.floor((player.score || 0) / 3))){
+    const ranks = [
+      { min:0, name:'Rookie', emoji:'🥉' },
+      { min:300, name:'Smart Rookie', emoji:'📘' },
+      { min:800, name:'Math Warrior', emoji:'⚔️' },
+      { min:1500, name:'UNO Strategist', emoji:'🃏' },
+      { min:2600, name:'Diamond Master', emoji:'💎' },
+      { min:4200, name:'Legendary Genius', emoji:'👑' },
+      { min:6500, name:'Cosmic Champion', emoji:'🌌' }
+    ];
+    return ranks.filter(r => score >= r.min).pop();
+  }
+  function rankLabel(score){ const r = getRank(score); return `${r.emoji} ${r.name}`; }
+  function openProfile(){
+    $('#loginNameInput').value = player.name && player.name !== 'Player' ? player.name : '';
+    $('#profileRankText').textContent = rankLabel();
+    $('#profileBestText').textContent = player.bestScore || 0;
+    $('#profileScoreText').textContent = player.score || 0;
+    $('#profileModal').classList.add('show');
+    setTimeout(()=>$('#loginNameInput')?.focus(), 120);
+  }
   function charVisual(c, big=false){
     const size = big ? 'text-5xl' : 'text-4xl';
     if(c.image){
@@ -427,12 +487,29 @@
     $('#diamondText').textContent = player.diamonds;
     $('#avatarText').textContent = currentChar().emoji;
     $('#playerAvatar').textContent = currentChar().emoji;
-    $('#nameText').textContent = player.name;
+    $('#nameText').textContent = player.nameSet ? player.name : 'Login';
+    $('#rankMini').textContent = getRank().name;
+    $('#menuRankText').textContent = rankLabel();
     $('#playerNameInput').value = player.name;
     $('#soundToggle').checked = player.sound;
   }
   function confetti(){
     for(let i=0;i<28;i++){ const d=document.createElement('div'); d.className='confetti'; d.style.left=rnd(100)+'%'; d.style.background=pick(['#22d3ee','#facc15','#fb7185','#4ade80','#fff']); d.style.animationDelay=(Math.random()*.35)+'s'; $('#app').appendChild(d); setTimeout(()=>d.remove(),2200); }
+  }
+  function fireworks(duration=2600){
+    const app = $('#app'); const colors = ['#fff','#fde047','#38bdf8','#fb7185','#4ade80','#c084fc'];
+    const burst = () => {
+      const cx = 55 + rnd(Math.max(1, app.clientWidth - 110));
+      const cy = 90 + rnd(Math.max(1, Math.floor(app.clientHeight * .48)));
+      for(let i=0;i<34;i++){
+        const dot=document.createElement('div'); dot.className='firework-dot';
+        const angle = (Math.PI*2*i)/34; const dist = 55 + rnd(95);
+        dot.style.left = cx+'px'; dot.style.top = cy+'px'; dot.style.color = pick(colors); dot.style.background = 'currentColor';
+        dot.style.setProperty('--dx', Math.cos(angle)*dist+'px'); dot.style.setProperty('--dy', Math.sin(angle)*dist+'px');
+        app.appendChild(dot); setTimeout(()=>dot.remove(), 1000);
+      }
+    };
+    burst(); const timer = setInterval(burst, 360); setTimeout(()=>clearInterval(timer), duration);
   }
 
   // ===================== NAV & MODE =====================
@@ -452,6 +529,16 @@
     if(e.target.closest('button, .card, input')) playSound('click');
   });
   $('#backBtn').addEventListener('click', ()=> showScreen('menuScreen'));
+  $('#profilePill').addEventListener('click', openProfile);
+  $('#loginMenuBtn').addEventListener('click', openProfile);
+  $('#rulesBtn').addEventListener('click', () => $('#rulesModal').classList.add('show'));
+  $('#closeRulesBtn').addEventListener('click', () => $('#rulesModal').classList.remove('show'));
+  $('#closeProfileBtn').addEventListener('click', () => $('#profileModal').classList.remove('show'));
+  $('#saveProfileBtn').addEventListener('click', async () => {
+    const name = $('#loginNameInput').value.trim();
+    if(!name){ $('#loginNameInput').classList.add('shake'); setTimeout(()=>$('#loginNameInput').classList.remove('shake'),300); beep('bad'); return; }
+    player.name = name; player.nameSet = true; saveLocal(); await saveCloudPlayer(); $('#profileModal').classList.remove('show'); beep('win');
+  });
   $$('.modeBtn').forEach(btn => btn.onclick = () => {
     selectedMode = { type: btn.dataset.mode, count: Number(btn.dataset.count) };
     showScreen('difficultyScreen');
@@ -489,22 +576,22 @@
   }
   async function renderLeaderboard(){
     const list = $('#leaderboardList');
-    let rows = [{ name: player.name+' (Kamu)', score: player.bestScore || 0, diamonds: player.diamonds, emoji: currentChar().emoji }];
+    let rows = [{ name: player.name+' (Kamu)', score: player.bestScore || 0, diamonds: player.diamonds, emoji: currentChar().emoji, rank:rankLabel(player.bestScore || 0) }];
     if(firebaseReady){
       try {
         const q = window.fb.query(window.fb.collection(db,'players'), window.fb.orderBy('bestScore','desc'), window.fb.limit(8));
         const snap = await window.fb.getDocs(q);
-        rows = snap.docs.map((d,i)=>{ const p=d.data(); const ch=characters.find(c=>c.id===p.selected)||characters[0]; return { name:p.name||'Player', score:p.bestScore||0, diamonds:p.diamonds||0, emoji:ch.emoji }; });
+        rows = snap.docs.map((d,i)=>{ const p=d.data(); const ch=characters.find(c=>c.id===p.selected)||characters[0]; return { name:p.name||'Player', score:p.bestScore||0, diamonds:p.diamonds||0, emoji:ch.emoji, rank:rankLabel(p.bestScore||0) }; });
       } catch(e){ console.warn('leaderboard failed', e); }
     }
     if(rows.length < 4) rows = rows.concat([
-      {name:'AI Koko', score:850, diamonds:190, emoji:'🤖'}, {name:'Nami Pro', score:720, diamonds:140, emoji:'🐰'}, {name:'Raka Math', score:610, diamonds:99, emoji:'🦊'}
+      {name:'AI Koko', score:850, diamonds:190, emoji:'🤖', rank:rankLabel(850)}, {name:'Nami Pro', score:720, diamonds:140, emoji:'🐰', rank:rankLabel(720)}, {name:'Raka Math', score:610, diamonds:99, emoji:'🦊', rank:rankLabel(610)}
     ]);
     list.innerHTML = rows.slice(0,8).map((r,i)=>`<div class="glass rounded-3xl p-4 flex items-center gap-3">
-      <div class="text-2xl font-black w-8">#${i+1}</div><div class="text-4xl">${r.emoji}</div><div class="flex-1"><div class="font-black">${r.name}</div><div class="text-xs opacity-85 font-bold">${r.diamonds} 💎</div></div><div class="font-black text-xl">${r.score}</div>
+      <div class="text-2xl font-black w-8">#${i+1}</div><div class="text-4xl">${r.emoji}</div><div class="flex-1"><div class="font-black">${r.name}</div><div class="text-xs opacity-85 font-bold">${r.diamonds} 💎 • ${r.rank || rankLabel(r.score)}</div></div><div class="font-black text-xl">${r.score}</div>
     </div>`).join('');
   }
-  $('#saveSettings').onclick = async()=>{ player.name = $('#playerNameInput').value.trim() || 'Player'; player.sound = $('#soundToggle').checked; saveLocal(); setMusicForScreen($('.screen.active')?.id || 'menuScreen'); await saveCloudPlayer(); beep(); };
+  $('#saveSettings').onclick = async()=>{ player.name = $('#playerNameInput').value.trim() || 'Player'; player.nameSet = player.name !== 'Player'; player.sound = $('#soundToggle').checked; saveLocal(); setMusicForScreen($('.screen.active')?.id || 'menuScreen'); await saveCloudPlayer(); beep(); };
   $('#resetData').onclick = ()=>{ if(confirm('Reset Diamond, karakter, dan skor lokal?')){ localStorage.removeItem(storageKey); location.reload(); } };
 
   // ===================== UNO ENGINE MULTI-PLAYER =====================
@@ -639,12 +726,12 @@
   function bestAIColor(hand){ const counts={red:0,yellow:0,green:0,blue:0}; hand.forEach(c=>{ if(counts[c.color]!=null) counts[c.color]++; }); return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0]; }
   function endGame(winnerIndex){
     const winner = game.players[winnerIndex]; const humanWin = !winner.ai && winnerIndex===0;
-    beep(humanWin?'win':'bad'); if(!winner.ai) confetti();
+    beep(humanWin?'win':'bad'); if(!winner.ai) { confetti(); fireworks(); }
     const bonus = !winner.ai ? 100 : 25; player.score += game.scoreThis + bonus; player.bestScore = Math.max(player.bestScore||0, game.scoreThis+bonus);
     saveLocal(); saveCloudPlayer();
     $('#endEmoji').textContent = !winner.ai ? '🏆' : '💪';
     $('#endTitle').textContent = `${winner.name} Menang!`;
-    $('#endDesc').textContent = !winner.ai ? `Skor ronde ${game.scoreThis+bonus}. UNO + matematika makin jago!` : `AI menang kali ini. Skor ronde ${game.scoreThis}.`;
+    $('#endDesc').textContent = !winner.ai ? `Skor ronde ${game.scoreThis+bonus}. Rank kamu sekarang ${rankLabel()}. UNO + matematika makin jago!` : `AI menang kali ini. Skor ronde ${game.scoreThis}.`; renderHUD();
     $('#endModal').classList.add('show');
   }
   $('#playAgainBtn').onclick = ()=>{ $('#endModal').classList.remove('show'); startGame(game?.diff||'easy'); };
@@ -684,8 +771,8 @@
 
   // ===================== BOOT =====================
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(console.warn); }
-  renderHUD(); renderShop(); renderLeaderboard(); initFirebase();
+  renderHUD(); renderShop(); renderLeaderboard(); initFirebase(); setTimeout(()=>{ if(!player.nameSet) openProfile(); }, 800);
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f75b64e93ace8b',t:'MTc4NzQ1OTE2NA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7c1b40fa7fe17',t:'MTc4NzQ2MzM1NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
 </body>
 </html>
