@@ -36,11 +36,12 @@
     @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
     :root { --vh: 1vh; --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
     * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: #06133d; }
+    html, body { width: 100%; min-height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: #06133d; }
     body { font-family: 'Nunito', ui-rounded, system-ui, sans-serif; }
     .app-height { height: calc(var(--vh) * 100); }
-    .screen { position: absolute; inset: 0; opacity: 0; transform: translateX(18px) scale(.99); pointer-events: none; transition: opacity .26s ease, transform .26s ease; }
+    .screen { position: absolute; inset: 0; opacity: 0; transform: translateX(18px) scale(.99); pointer-events: none; transition: opacity .26s ease, transform .26s ease; overflow-y:auto; overflow-x:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
     .screen.active { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; }
+    .screen::-webkit-scrollbar { display:none; }
     .glass { background: linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.09)); border: 1px solid rgba(255,255,255,.28); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 18px 45px rgba(3, 8, 35, .28); backdrop-filter: blur(16px); }
     .btn { position:relative; overflow:hidden; border-radius: 999px; min-height: 56px; font-weight: 1000; color: white; letter-spacing:.2px; text-shadow: 0 2px 0 rgba(0,0,0,.18); box-shadow: 0 9px 0 rgba(0,0,0,.2), 0 18px 28px rgba(0,0,0,.24), inset 0 2px 0 rgba(255,255,255,.32); transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; display:flex; align-items:center; justify-content:center; gap:.55rem; border:1px solid rgba(255,255,255,.28); }
     .btn::before { content:''; position:absolute; inset:2px 14px auto 14px; height:42%; border-radius:999px; background:linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,0)); pointer-events:none; }
@@ -68,7 +69,7 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     /* Sparkle putih dinonaktifkan agar tidak muncul seperti kotak glitch di area logo/UI. */
     .sparkle { display: none !important; }
-    .portrait-shell { width: min(100vw, 480px); height: 100%; margin:0 auto; position:relative; overflow:hidden; background: radial-gradient(circle at 20% 0%, #35d5ff 0%, transparent 28%), radial-gradient(circle at 92% 14%, #ff4e93 0%, transparent 24%), linear-gradient(160deg,#0e4cff 0%,#6717d1 52%,#06133d 100%); }
+    .portrait-shell { width: min(100vw, 480px); min-height: 100dvh; height: calc(var(--vh) * 100); margin:0 auto; position:relative; overflow:hidden; background: radial-gradient(circle at 20% 0%, #35d5ff 0%, transparent 28%), radial-gradient(circle at 92% 14%, #ff4e93 0%, transparent 24%), linear-gradient(160deg,#0e4cff 0%,#6717d1 52%,#06133d 100%); }
     .soft-pattern::after { content:''; position:absolute; inset:0; pointer-events:none; opacity:.12; background-image: radial-gradient(circle at 12px 12px, #fff 2px, transparent 3px); background-size: 34px 34px; }
     .hud-pill { border-radius:999px; background: rgba(7,13,44,.52); border:1px solid rgba(255,255,255,.22); backdrop-filter: blur(12px); }
     .modal-backdrop { position:absolute; inset:0; background:rgba(2,6,23,.64); display:none; align-items:center; justify-content:center; padding:22px; z-index:50; }
@@ -123,14 +124,48 @@
       <h1 class="text-3xl font-black drop-shadow-lg">Mode Bermain</h1>
       <p class="opacity-90 mt-1 font-bold">Pilih lawan AI atau main lokal bergantian di satu HP.</p>
       <div class="mt-7 grid gap-3">
-        <button class="modeBtn btn bg-gradient-to-r from-indigo-400 to-blue-600 justify-between px-6" data-mode="ai" data-count="2"><span>🤖 Lawan AI</span><span>2 pemain</span></button>
-        <button class="modeBtn btn bg-gradient-to-r from-lime-400 to-emerald-500 justify-between px-6" data-mode="local" data-count="2"><span>👥 Mode 2 Pemain</span><span>Lokal</span></button>
-        <button class="modeBtn btn bg-gradient-to-r from-amber-300 to-orange-500 justify-between px-6" data-mode="local" data-count="3"><span>👨‍👩‍👧 Mode 3 Pemain</span><span>Lokal</span></button>
-        <button class="modeBtn btn bg-gradient-to-r from-fuchsia-400 to-pink-500 justify-between px-6" data-mode="local" data-count="4"><span>🎉 Mode 4 Pemain</span><span>Lokal</span></button>
-        <button id="customModeBtn" class="btn bg-gradient-to-r from-cyan-400 to-purple-600 justify-between px-6"><span>✨ Mode Custom</span><span>&gt; 4 pemain</span></button>
+        <button class="modeBtn btn bg-gradient-to-r from-indigo-400 to-blue-600 justify-between px-6" data-mode="ai" data-count="2"><span>🤖 Mode AI</span><span>1 HP</span></button>
+        <button class="modeBtn btn bg-gradient-to-r from-lime-400 to-emerald-500 justify-between px-6" data-mode="local" data-count="2"><span>👥 Lokal 2 Pemain</span><span>1 HP</span></button>
+        <button class="btn bg-gradient-to-r from-fuchsia-400 via-purple-500 to-blue-600 justify-between px-6" data-nav="onlineScreen"><span>🌐 Online 2–8 Pemain</span><span>HP masing-masing</span></button>
       </div>
       <div class="glass rounded-[28px] p-4 mt-7 text-sm leading-relaxed font-bold">
-        Mode lokal memakai sistem pass-and-play: setiap pemain bergantian memegang HP saat gilirannya. Mode AI tetap cocok untuk latihan sendiri.
+        Mode lokal hanya untuk AI dan 2 pemain di satu HP. Mode online dipakai untuk 2–8 pemain dengan HP masing-masing lewat Room Code.
+      </div>
+    </section>
+
+
+    <!-- ONLINE ROOM -->
+    <section id="onlineScreen" class="screen px-5 pt-[calc(var(--safe-top)+74px)] pb-[calc(var(--safe-bottom)+24px)]">
+      <h1 class="text-3xl font-black drop-shadow-lg">Mode Online</h1>
+      <p class="opacity-90 mt-1 font-bold text-sm">Main 2–8 pemain memakai HP masing-masing. Buat room lalu bagikan kode ke teman.</p>
+      <div class="glass rounded-[30px] p-4 mt-5 grid gap-4">
+        <label class="grid gap-2 font-black">Jumlah Pemain
+          <select id="onlineMaxPlayers" class="w-full rounded-2xl px-4 py-3 text-slate-900 outline-none font-black">
+            <option value="2">2 Pemain</option><option value="3">3 Pemain</option><option value="4">4 Pemain</option><option value="5">5 Pemain</option><option value="6">6 Pemain</option><option value="7">7 Pemain</option><option value="8">8 Pemain</option>
+          </select>
+        </label>
+        <button id="createRoomBtn" class="btn bg-gradient-to-r from-lime-400 to-emerald-500">➕ Buat Room Online</button>
+        <div class="grid grid-cols-[1fr_auto] gap-2">
+          <input id="joinRoomInput" class="rounded-2xl px-4 py-3 text-slate-900 font-black uppercase outline-none" placeholder="Kode Room" maxlength="6" />
+          <button id="joinRoomBtn" class="btn bg-gradient-to-r from-sky-400 to-blue-600 px-5 min-h-[48px]">Join</button>
+        </div>
+      </div>
+      <div id="onlineLobbyBox" class="glass rounded-[30px] p-4 mt-4 hidden">
+        <div class="text-center">
+          <div class="text-xs font-black opacity-80">Kode Room</div>
+          <div id="roomCodeText" class="text-4xl font-black tracking-[.22em] text-yellow-200">------</div>
+          <div id="roomStatusText" class="text-xs font-bold opacity-85 mt-1">Menunggu pemain...</div>
+        </div>
+        <div id="roomPlayersList" class="grid gap-2 mt-4"></div>
+        <div class="grid grid-cols-3 gap-2 mt-4">
+          <button class="onlineDiff btn bg-gradient-to-r from-green-300 to-emerald-500 min-h-[46px] text-xs" data-diff="easy">Mudah</button>
+          <button class="onlineDiff btn bg-gradient-to-r from-yellow-300 to-orange-500 min-h-[46px] text-xs" data-diff="medium">Sedang</button>
+          <button class="onlineDiff btn bg-gradient-to-r from-red-400 to-purple-600 min-h-[46px] text-xs" data-diff="hard">Sulit</button>
+        </div>
+        <button id="leaveRoomBtn" class="btn bg-gradient-to-r from-slate-400 to-slate-600 mt-3 min-h-[46px]">Keluar Room</button>
+      </div>
+      <div class="glass rounded-[24px] p-4 mt-4 text-xs font-bold leading-relaxed">
+        Catatan: mode online membutuhkan Firebase/Internet aktif. Untuk produksi, gunakan Firestore Rules agar hanya pemain room yang dapat membaca data room.
       </div>
     </section>
 
@@ -345,8 +380,8 @@
     try {
       const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js');
       const { getAuth, signInAnonymously, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
-      const { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, orderBy, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js');
-      window.fb = { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, orderBy, limit, getDocs };
+      const { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, orderBy, limit, getDocs, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js');
+      window.fb = { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, orderBy, limit, getDocs, onSnapshot };
       appFB = initializeApp(firebaseConfig); auth = getAuth(appFB); db = getFirestore(appFB);
       onAuthStateChanged(auth, async (user) => {
         if (user) {
@@ -397,6 +432,7 @@
   player.unlocked = [...new Set([...(player.unlocked || []), ...freeCharacterIds])];
   if(player.nameSet == null) player.nameSet = !!(player.name && player.name !== 'Player');
   let selectedMode = { type:'ai', count:2 };
+  let onlineRoomId = null, onlineRoom = null, onlineUnsub = null;
   let game = null;
   let pendingMath = null;
   let pendingWild = null;
@@ -573,14 +609,96 @@
     selectedMode = { type: btn.dataset.mode, count: Number(btn.dataset.count) };
     showScreen('difficultyScreen');
   });
-  $('#customModeBtn').onclick = () => $('#customModal').classList.add('show');
-  $('#cancelCustomMode').onclick = () => $('#customModal').classList.remove('show');
-  $('#startCustomMode').onclick = () => {
+  $('#customModeBtn')?.addEventListener('click', () => $('#customModal').classList.add('show'));
+  $('#cancelCustomMode')?.addEventListener('click', () => $('#customModal').classList.remove('show'));
+  $('#startCustomMode')?.addEventListener('click', () => {
     const count = clamp(Number($('#customCountInput').value || 5), 5, 8);
     selectedMode = { type:'local', count };
     $('#customModal').classList.remove('show');
     showScreen('difficultyScreen');
-  };
+  });
+
+
+  // ===================== ONLINE ROOM (FIREBASE) =====================
+  const roomRef = (code) => window.fb.doc(db, 'rooms', code);
+  const makeRoomCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+  function myOnlineMember(){ return { uid:userId, name: player.nameSet ? player.name : 'Player', emoji: currentChar().emoji, selected: player.selected }; }
+  function requireOnlineReady(){
+    if(!firebaseReady || !userId){ alert('Firebase belum online. Pastikan internet aktif dan Anonymous Auth/Firestore sudah aktif.'); return false; }
+    if(!player.nameSet){ openProfile(); return false; }
+    return true;
+  }
+  async function createOnlineRoom(){
+    if(!requireOnlineReady()) return;
+    const maxPlayers = clamp(Number($('#onlineMaxPlayers').value || 2), 2, 8);
+    let code = makeRoomCode(); let tries = 0;
+    while(tries++ < 5){ const snap = await window.fb.getDoc(roomRef(code)); if(!snap.exists()) break; code = makeRoomCode(); }
+    await window.fb.setDoc(roomRef(code), { code, host:userId, maxPlayers, status:'waiting', members:[myOnlineMember()], createdAt: window.fb.serverTimestamp(), updatedAt: window.fb.serverTimestamp() });
+    subscribeOnlineRoom(code); beep('win');
+  }
+  async function joinOnlineRoom(){
+    if(!requireOnlineReady()) return;
+    const code = ($('#joinRoomInput').value || '').trim().toUpperCase();
+    if(code.length < 4){ alert('Masukkan kode room yang benar.'); return; }
+    const ref = roomRef(code); const snap = await window.fb.getDoc(ref);
+    if(!snap.exists()){ alert('Room tidak ditemukan.'); return; }
+    const room = snap.data();
+    if(room.status !== 'waiting'){ alert('Game di room ini sudah berjalan.'); return; }
+    const members = room.members || [];
+    if(!members.some(m => m.uid === userId)){
+      if(members.length >= room.maxPlayers){ alert('Room sudah penuh.'); return; }
+      members.push(myOnlineMember());
+      await window.fb.updateDoc(ref, { members, updatedAt: window.fb.serverTimestamp() });
+    }
+    subscribeOnlineRoom(code); beep('win');
+  }
+  function subscribeOnlineRoom(code){
+    if(onlineUnsub) onlineUnsub();
+    onlineRoomId = code;
+    onlineUnsub = window.fb.onSnapshot(roomRef(code), (snap) => {
+      if(!snap.exists()){ alert('Room sudah ditutup.'); leaveOnlineRoom(false); return; }
+      onlineRoom = snap.data(); renderOnlineLobby();
+      if(onlineRoom.gameState){
+        game = onlineRoom.gameState;
+        selectedMode = { type:'online', count: game.players?.length || onlineRoom.maxPlayers || 2 };
+        if(!$('#gameScreen').classList.contains('active')) showScreen('gameScreen');
+        renderGame();
+      }
+    });
+    showScreen('onlineScreen');
+  }
+  function renderOnlineLobby(){
+    if(!onlineRoom) return;
+    $('#onlineLobbyBox').classList.remove('hidden');
+    $('#roomCodeText').textContent = onlineRoom.code || onlineRoomId;
+    const members = onlineRoom.members || [];
+    $('#roomStatusText').textContent = onlineRoom.status === 'playing' ? 'Game sedang berjalan' : `Menunggu ${members.length}/${onlineRoom.maxPlayers} pemain`;
+    $('#roomPlayersList').innerHTML = members.map((m,i)=>`<div class="bg-white/12 rounded-2xl p-3 flex items-center gap-2 font-black"><span class="text-2xl">${m.emoji||'🙂'}</span><span class="flex-1">${i+1}. ${m.name||'Player'}</span>${m.uid===onlineRoom.host?'👑':''}${m.uid===userId?' Kamu':''}</div>`).join('');
+    const host = onlineRoom.host === userId;
+    $$('.onlineDiff').forEach(b => { b.style.display = host && onlineRoom.status !== 'playing' ? 'flex' : 'none'; });
+  }
+  async function startOnlineGame(diff){
+    if(!onlineRoom || onlineRoom.host !== userId) return alert('Hanya host yang bisa mulai.');
+    const members = onlineRoom.members || [];
+    if(members.length < 2) return alert('Minimal 2 pemain untuk mulai online.');
+    let deck = buildDeck(); let discard = deck.pop(); while(discard.color==='black'){ deck.unshift(discard); discard = deck.pop(); }
+    const players = members.slice(0, onlineRoom.maxPlayers).map((m,i)=>({ uid:m.uid, name:m.name||`Pemain ${i+1}`, emoji:m.emoji||'🙂', ai:false, hand:deck.splice(0,7), unoCalled:false }));
+    game = { diff, mode:{type:'online', count:players.length}, roomId:onlineRoomId, deck, discard:[discard], currentColor:discard.color, players, turnIndex:0, direction:1, scoreThis:0, locked:false, privacy:false };
+    await syncOnlineGame(); showScreen('gameScreen'); renderGame(); toast('Game online dimulai!');
+  }
+  async function syncOnlineGame(){
+    if(game?.mode?.type !== 'online' || !onlineRoomId || !firebaseReady) return;
+    const clean = JSON.parse(JSON.stringify(game));
+    await window.fb.updateDoc(roomRef(onlineRoomId), { gameState: clean, status:'playing', updatedAt: window.fb.serverTimestamp() }).catch(console.warn);
+  }
+  function leaveOnlineRoom(toMenu=true){
+    if(onlineUnsub) onlineUnsub(); onlineUnsub = null; onlineRoomId = null; onlineRoom = null;
+    $('#onlineLobbyBox')?.classList.add('hidden'); if(toMenu) showScreen('menuScreen');
+  }
+  $('#createRoomBtn')?.addEventListener('click', createOnlineRoom);
+  $('#joinRoomBtn')?.addEventListener('click', joinOnlineRoom);
+  $('#leaveRoomBtn')?.addEventListener('click', () => leaveOnlineRoom(true));
+  $$('.onlineDiff').forEach(btn => btn.addEventListener('click', () => startOnlineGame(btn.dataset.diff)));
 
   // ===================== SHOP & LEADERBOARD =====================
   function renderShop(){
@@ -657,29 +775,36 @@
   }
   $$('.difficulty').forEach(btn=>btn.onclick=()=>startGame(btn.dataset.diff));
   function currentTurn(){ return game.players[game.turnIndex]; }
+  function myPlayerIndex(){ return game?.mode?.type === 'online' ? game.players.findIndex(p => p.uid === userId) : game.turnIndex; }
+  function isMyOnlineTurn(){ return game?.mode?.type !== 'online' || myPlayerIndex() === game.turnIndex; }
   function nextIndex(steps=1){ const n=game.players.length; return (game.turnIndex + game.direction*steps + n*10) % n; }
   function topCard(){ return game.discard[game.discard.length-1]; }
   function isPlayable(card){ const top=topCard(); return card.color==='black' || card.color===game.currentColor || (card.type==='number' && top.type==='number' && card.value===top.value) || (card.type===top.type && card.type!=='number'); }
   function cardHtml(card, small=false){ return `<div class="card ${card.color==='black'?'black':card.color} ${small?'small':''}" data-id="${card.id}"><span>${card.label}</span></div>`; }
   function renderGame(){
     if(!game) return;
-    const cur = currentTurn();
+    if(game.ended && !$('#endModal').classList.contains('show')) setTimeout(() => showEndResult(game.winnerIndex, false), 50);
+    const turnPlayer = currentTurn();
+    const online = game.mode?.type === 'online';
+    const mineIdx = myPlayerIndex();
+    const cur = online ? (game.players[mineIdx] || turnPlayer) : turnPlayer;
+    const myTurn = !online || mineIdx === game.turnIndex;
     const privacy = !!(game.privacy && game.mode.type === 'local' && !cur.ai);
-    const opponents = game.players.map((p,i)=>({p,i})).filter(x=>x.i!==game.turnIndex);
-    $('#opponentTitle').textContent = game.mode.type==='ai' ? '🤖 Lawan AI' : `👥 ${game.players.length} Pemain Lokal`;
+    const opponents = game.players.map((p,i)=>({p,i})).filter(x=>x.i!==(online ? mineIdx : game.turnIndex));
+    $('#opponentTitle').textContent = online ? '🌐 Mode Online' : (game.mode.type==='ai' ? '🤖 Lawan AI' : `👥 ${game.players.length} Pemain Lokal`);
     $('#aiCount').textContent = opponents.reduce((sum,x)=>sum+x.p.hand.length,0);
-    $('#playerCount').textContent = cur.hand.length; $('#scoreText').textContent = game.scoreThis;
-    $('#currentPlayerName').textContent = privacy ? 'Kartu terkunci' : (cur.ai ? cur.name : (game.mode.type==='local' ? cur.name : 'Kamu'));
-    $('#playerAvatar').textContent = cur.emoji;
-    $('#turnText').textContent = privacy ? 'Pass HP' : (cur.ai ? 'Giliran AI' : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`);
-    $('#turnText').classList.toggle('bg-emerald-500/50', !cur.ai);
-    $('#unoBtn').classList.toggle('uno-hot', !cur.ai && cur.hand.length <= 2);
+    $('#playerCount').textContent = cur?.hand?.length || 0; $('#scoreText').textContent = game.scoreThis;
+    $('#currentPlayerName').textContent = privacy ? 'Kartu terkunci' : (online ? 'Kamu' : (cur.ai ? cur.name : (game.mode.type==='local' ? cur.name : 'Kamu')));
+    $('#playerAvatar').textContent = cur?.emoji || '🙂';
+    $('#turnText').textContent = privacy ? 'Pass HP' : (online ? (myTurn ? 'Giliranmu' : `Giliran ${turnPlayer.name}`) : (cur.ai ? 'Giliran AI' : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`));
+    $('#turnText').classList.toggle('bg-emerald-500/50', !cur?.ai && myTurn && !privacy);
+    $('#unoBtn').classList.toggle('uno-hot', !cur?.ai && myTurn && (cur?.hand?.length || 0) <= 2);
     $('#aiHand').innerHTML = opponents.map(({p,i})=>`<div class="glass rounded-2xl px-2 py-1 min-w-[64px] text-center"><div class="text-lg">${p.emoji}</div><div class="text-[10px] font-black truncate">${p.name}</div><div class="flex justify-center gap-[2px] mt-1">${p.hand.slice(0,5).map(()=>'<div class="card small back"><span></span></div>').join('')}</div><div class="text-[10px] font-black mt-1">${p.hand.length} kartu</div></div>`).join('');
     const t=topCard(); const discard=$('#discardCard'); discard.className=`card ${t.color==='black'?'black':game.currentColor} mx-auto animate-cardDrop`; discard.innerHTML=`<span>${t.label}</span>`;
     if(privacy){
       $('#playerHand').innerHTML = cur.hand.map(()=>'<div class="card back"><span>?</span></div>').join('');
     } else {
-      $('#playerHand').innerHTML = cur.hand.map(c=>{ const play = !cur.ai && isPlayable(c); return cardHtml(c).replace('class="card','class="card '+(play?'playable ':'')).replace(`data-id="${c.id}"`, `data-id="${c.id}" role="button" aria-label="Kartu ${c.label}"`); }).join('');
+      $('#playerHand').innerHTML = cur.hand.map(c=>{ const play = !cur.ai && !privacy && myTurn && isPlayable(c); return cardHtml(c).replace('class="card','class="card '+(play?'playable ':'')).replace(`data-id="${c.id}"`, `data-id="${c.id}" role="button" aria-label="Kartu ${c.label}"`); }).join('');
       $$('#playerHand .card').forEach(el => el.onclick = () => onHumanCard(Number(el.dataset.id)));
     }
   }
@@ -688,20 +813,23 @@
     const card = game.deck.pop(); game.players[pIndex].hand.push(card); return card;
   }
   $('#drawBtn').onclick = async()=>{
-    if(!game || game.locked || game.privacy || currentTurn().ai) return;
-    const c = drawOne(game.turnIndex); renderGame(); toast(`${currentTurn().name} ambil kartu ${c.label}.`); playSound('draw') || beep(); await endTurn(1);
+    if(!game || game.locked || game.privacy || currentTurn().ai || !isMyOnlineTurn()) return;
+    const pIndex = myPlayerIndex();
+    const c = drawOne(pIndex); renderGame(); toast(`${game.players[pIndex].name} ambil kartu ${c.label}.`); playSound('draw') || beep(); await endTurn(1);
   };
   $('#unoBtn').onclick = ()=>{
-    if(game && !currentTurn().ai && currentTurn().hand.length<=2){
-      currentTurn().unoCalled=true;
+    if(!game || !isMyOnlineTurn()) return toast('Belum giliranmu 😄');
+    const pIndex = myPlayerIndex(); const p = game.players[pIndex];
+    if(p && !p.ai && p.hand.length<=2){
+      p.unoCalled=true;
       $('#unoPromptModal').classList.remove('show');
-      toast(`${currentTurn().name}: UNO!`); beep('win'); vibrate(30); renderGame();
+      toast(`${p.name}: UNO!`); beep('win'); vibrate(30); renderGame(); syncOnlineGame();
     }
     else toast('Belum waktunya UNO 😄');
   };
   async function onHumanCard(id){
-    if(game.locked || game.privacy || currentTurn().ai) return;
-    const pIndex = game.turnIndex; const hand = game.players[pIndex].hand;
+    if(game.locked || game.privacy || currentTurn().ai || !isMyOnlineTurn()) return;
+    const pIndex = myPlayerIndex(); const hand = game.players[pIndex].hand;
     const idx = hand.findIndex(c=>c.id===id); const card=hand[idx]; if(!card) return;
     if(!isPlayable(card)){ toast('Kartu belum cocok. Pilih warna/angka yang sama.'); beep('bad'); vibrate(50); return; }
     const needsMath = card.type !== 'number' || Math.random() < ({easy:.12, medium:.2, hard:.32}[game.diff]);
@@ -715,6 +843,7 @@
   async function showUnoPrompt(pIndex){
     const p = game.players[pIndex];
     if(!p || p.hand.length !== 1 || p.unoCalled) return;
+    if(game.mode?.type === 'online' && p.uid !== userId) return;
     if(p.ai){ p.unoCalled = Math.random() < .84; if(p.unoCalled) toast(`${p.name}: UNO!`); return; }
     game.locked = true;
     let left = 3;
@@ -784,6 +913,7 @@
     }
     game.privacy = false;
     game.locked = false; renderGame();
+    await syncOnlineGame();
     if(cur.ai) { await sleep(850); aiMove(); }
     else toast(`${cur.name}, giliranmu.`);
   }
@@ -803,18 +933,34 @@
     await playCard(pIndex, idx, chosen);
   }
   function bestAIColor(hand){ const counts={red:0,yellow:0,green:0,blue:0}; hand.forEach(c=>{ if(counts[c.color]!=null) counts[c.color]++; }); return Object.entries(counts).sort((a,b)=>b[1]-a[1])[0][0]; }
-  function endGame(winnerIndex){
-    const winner = game.players[winnerIndex]; const humanWin = !winner.ai && winnerIndex===0;
-    beep(humanWin?'win':'bad'); if(!winner.ai) { confetti(); fireworks(); }
-    const bonus = !winner.ai ? 100 : 25; player.score += game.scoreThis + bonus; player.bestScore = Math.max(player.bestScore||0, game.scoreThis+bonus);
-    saveLocal(); saveCloudPlayer();
-    $('#endEmoji').textContent = !winner.ai ? '🏆' : '💪';
-    $('#endTitle').textContent = `${winner.name} Menang!`;
-    $('#endDesc').textContent = !winner.ai ? `Skor ronde ${game.scoreThis+bonus}. Rank kamu sekarang ${rankLabel()}. UNO + matematika makin jago!` : `AI menang kali ini. Skor ronde ${game.scoreThis}.`; renderHUD();
+  function showEndResult(winnerIndex, awardScore=false){
+    const winner = game.players[winnerIndex];
+    const isMe = game.mode?.type === 'online' ? winner?.uid === userId : winnerIndex === 0;
+    const humanWinner = winner && !winner.ai;
+    beep(isMe || humanWinner ? 'win' : 'bad');
+    if(humanWinner) { confetti(); fireworks(); }
+    const bonus = humanWinner ? 100 : 25;
+    if(awardScore && (game.mode?.type !== 'online' || isMe)){
+      player.score += game.scoreThis + bonus;
+      player.bestScore = Math.max(player.bestScore||0, game.scoreThis+bonus);
+      saveLocal(); saveCloudPlayer();
+    }
+    $('#endEmoji').textContent = humanWinner ? '🏆' : '💪';
+    $('#endTitle').textContent = `${winner?.name || 'Pemain'} Menang!`;
+    $('#endDesc').textContent = humanWinner ? `Skor ronde ${game.scoreThis+bonus}. Rank kamu sekarang ${rankLabel()}. UNO + matematika makin jago!` : `AI menang kali ini. Skor ronde ${game.scoreThis}.`; renderHUD();
     $('#endModal').classList.add('show');
   }
-  $('#playAgainBtn').onclick = ()=>{ $('#endModal').classList.remove('show'); startGame(game?.diff||'easy'); };
-  $('#endMenuBtn').onclick = ()=>{ $('#endModal').classList.remove('show'); showScreen('menuScreen'); };
+  function endGame(winnerIndex){
+    game.ended = true; game.winnerIndex = winnerIndex; game.locked = true;
+    showEndResult(winnerIndex, true); syncOnlineGame();
+  }
+  $('#playAgainBtn').onclick = ()=>{
+    $('#endModal').classList.remove('show');
+    if(game?.mode?.type === 'online'){
+      if(onlineRoom?.host === userId) startOnlineGame(game?.diff || 'easy'); else showScreen('onlineScreen');
+    } else startGame(game?.diff||'easy');
+  };
+  $('#endMenuBtn').onclick = ()=>{ $('#endModal').classList.remove('show'); if(game?.mode?.type === 'online') leaveOnlineRoom(true); else showScreen('menuScreen'); };
 
   // ===================== MATH CHALLENGE =====================
   function makeQuestion(diff){
@@ -861,6 +1007,6 @@
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(console.warn); }
   renderHUD(); renderShop(); renderLeaderboard(); initFirebase(); setTimeout(()=>{ if(!player.nameSet) openProfile(); }, 800);
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f88c7e38b5b00b',t:'MTc4NzQ3MTY2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-</body>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8aeb8fa7c1b28',t:'MTc4NzQ3MzA2Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
