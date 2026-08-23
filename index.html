@@ -42,8 +42,12 @@
     .screen { position: absolute; inset: 0; opacity: 0; transform: translateX(18px) scale(.99); pointer-events: none; transition: opacity .26s ease, transform .26s ease; }
     .screen.active { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; }
     .glass { background: linear-gradient(145deg, rgba(255,255,255,.24), rgba(255,255,255,.09)); border: 1px solid rgba(255,255,255,.28); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 18px 45px rgba(3, 8, 35, .28); backdrop-filter: blur(16px); }
-    .btn { border-radius: 999px; min-height: 54px; font-weight: 900; color: white; text-shadow: 0 2px 0 rgba(0,0,0,.18); box-shadow: 0 9px 0 rgba(0,0,0,.18), 0 18px 28px rgba(0,0,0,.22); transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; display:flex; align-items:center; justify-content:center; gap:.55rem; }
-    .btn:active { transform: translateY(5px) scale(.985); box-shadow: 0 4px 0 rgba(0,0,0,.2), 0 10px 20px rgba(0,0,0,.18); filter: brightness(.98); }
+    .btn { position:relative; overflow:hidden; border-radius: 999px; min-height: 56px; font-weight: 1000; color: white; letter-spacing:.2px; text-shadow: 0 2px 0 rgba(0,0,0,.18); box-shadow: 0 9px 0 rgba(0,0,0,.2), 0 18px 28px rgba(0,0,0,.24), inset 0 2px 0 rgba(255,255,255,.32); transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; display:flex; align-items:center; justify-content:center; gap:.55rem; border:1px solid rgba(255,255,255,.28); }
+    .btn::before { content:''; position:absolute; inset:2px 14px auto 14px; height:42%; border-radius:999px; background:linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,0)); pointer-events:none; }
+    .btn::after { content:''; position:absolute; top:-80%; left:-25%; width:34%; height:250%; transform:rotate(24deg); background:linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent); animation: shine 3.2s ease-in-out infinite; pointer-events:none; }
+    .btn:active { transform: translateY(5px) scale(.985); box-shadow: 0 4px 0 rgba(0,0,0,.22), 0 10px 20px rgba(0,0,0,.18), inset 0 2px 0 rgba(255,255,255,.22); filter: brightness(.98); }
+    @keyframes shine { 0%,55% { left:-45%; opacity:0; } 70% { opacity:.9; } 100% { left:120%; opacity:0; } }
+    .uno-hot { animation: pulsePop .65s ease-in-out infinite; box-shadow:0 0 0 4px rgba(255,255,255,.18), 0 0 28px rgba(248,113,113,.95) !important; }
     .card { width: 62px; height: 92px; border-radius: 15px; border: 4px solid #fff; box-shadow: 0 8px 0 rgba(0,0,0,.25), 0 12px 25px rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; color: white; font-weight: 1000; position: relative; flex: 0 0 auto; user-select: none; }
     .card::before { content:''; position:absolute; inset:9px; border-radius: 999px; background: rgba(255,255,255,.18); transform: rotate(-24deg); }
     .card > span { position: relative; z-index: 1; font-size: 1.6rem; -webkit-text-stroke: 1.5px rgba(0,0,0,.45); text-shadow: 0 2px 0 rgba(0,0,0,.32); }
@@ -242,7 +246,7 @@
         <h2 class="text-2xl font-black text-center">Cara Menang</h2>
         <div class="mt-4 grid gap-3 text-sm font-bold leading-relaxed">
           <div class="bg-white/12 rounded-2xl p-3">🏁 <b>Menang ronde:</b> pemain yang paling dulu menghabiskan semua kartu di tangan menjadi pemenang.</div>
-          <div class="bg-white/12 rounded-2xl p-3">🔊 <b>UNO:</b> saat kartu tinggal 1, tekan tombol UNO. Kalau lupa, terkena penalti ambil 2 kartu.</div>
+          <div class="bg-white/12 rounded-2xl p-3">🔊 <b>UNO:</b> saat kartu tinggal 1, popup BILANG UNO muncul. Tekan tombol UNO/HUD sebelum waktu habis. Kalau lupa, terkena penalti ambil 2 kartu.</div>
           <div class="bg-white/12 rounded-2xl p-3">🧮 <b>Matematika:</b> kartu aksi wajib menjawab soal. Benar = kartu aktif + dapat Diamond. Salah = kartu batal dan giliran lewat.</div>
           <div class="bg-white/12 rounded-2xl p-3">🏅 <b>Ranking:</b> naik rank dari skor terbaik dan total skor. Semakin sering menang dan benar menjawab soal, rank semakin tinggi.</div>
         </div>
@@ -283,6 +287,18 @@
           <button class="colorPick btn bg-green-500" data-color="green">Hijau</button>
           <button class="colorPick btn bg-blue-500" data-color="blue">Biru</button>
         </div>
+      </div>
+    </div>
+
+
+    <!-- UNO PROMPT MODAL -->
+    <div id="unoPromptModal" class="modal-backdrop">
+      <div class="modal-card glass rounded-[34px] p-5 text-center">
+        <div class="text-6xl animate-pulsePop">🔊</div>
+        <h2 class="text-4xl font-black mt-2 text-yellow-200 drop-shadow-lg">UNO!</h2>
+        <p id="unoPromptText" class="font-bold opacity-95 mt-2">Kartu tinggal satu. Tekan tombol ini untuk bilang UNO!</p>
+        <div class="mt-4 bg-white/15 rounded-3xl p-3 font-black text-sm">Sisa waktu: <span id="unoTimerText" class="text-2xl text-yellow-200">3</span></div>
+        <button id="sayUnoNowBtn" class="btn bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 mt-5 text-2xl">🔊 BILANG UNO!</button>
       </div>
     </div>
 
@@ -642,6 +658,7 @@
     $('#playerAvatar').textContent = cur.emoji;
     $('#turnText').textContent = cur.ai ? 'Giliran AI' : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`;
     $('#turnText').classList.toggle('bg-emerald-500/50', !cur.ai);
+    $('#unoBtn').classList.toggle('uno-hot', !cur.ai && cur.hand.length <= 2);
     $('#aiHand').innerHTML = opponents.map(({p,i})=>`<div class="glass rounded-2xl px-2 py-1 min-w-[64px] text-center"><div class="text-lg">${p.emoji}</div><div class="text-[10px] font-black truncate">${p.name}</div><div class="flex justify-center gap-[2px] mt-1">${p.hand.slice(0,5).map(()=>'<div class="card small back"><span></span></div>').join('')}</div><div class="text-[10px] font-black mt-1">${p.hand.length} kartu</div></div>`).join('');
     const t=topCard(); const discard=$('#discardCard'); discard.className=`card ${t.color==='black'?'black':game.currentColor} mx-auto animate-cardDrop`; discard.innerHTML=`<span>${t.label}</span>`;
     $('#playerHand').innerHTML = cur.hand.map(c=>{ const play = !cur.ai && isPlayable(c); return cardHtml(c).replace('class="card','class="card '+(play?'playable ':'')).replace(`data-id="${c.id}"`, `data-id="${c.id}" role="button" aria-label="Kartu ${c.label}"`); }).join('');
@@ -656,7 +673,11 @@
     const c = drawOne(game.turnIndex); renderGame(); toast(`${currentTurn().name} ambil kartu ${c.label}.`); playSound('draw') || beep(); await endTurn(1);
   };
   $('#unoBtn').onclick = ()=>{
-    if(game && currentTurn().hand.length<=2){ currentTurn().unoCalled=true; toast(`${currentTurn().name}: UNO!`); beep('win'); vibrate(30); }
+    if(game && !currentTurn().ai && currentTurn().hand.length<=2){
+      currentTurn().unoCalled=true;
+      $('#unoPromptModal').classList.remove('show');
+      toast(`${currentTurn().name}: UNO!`); beep('win'); vibrate(30); renderGame();
+    }
     else toast('Belum waktunya UNO 😄');
   };
   async function onHumanCard(id){
@@ -672,6 +693,35 @@
     if(needsMath) askMath(game.diff, async(correct)=>{ if(correct) await play(); else { toast('Jawaban salah! Kartu batal, giliran lewat.'); await endTurn(1); } });
     else await play();
   }
+  async function showUnoPrompt(pIndex){
+    const p = game.players[pIndex];
+    if(!p || p.hand.length !== 1 || p.unoCalled) return;
+    if(p.ai){ p.unoCalled = Math.random() < .84; if(p.unoCalled) toast(`${p.name}: UNO!`); return; }
+    game.locked = true;
+    let left = 3;
+    $('#unoPromptText').textContent = `${p.name}, kartu kamu tinggal satu. Tekan BILANG UNO sebelum waktu habis!`;
+    $('#unoTimerText').textContent = left;
+    $('#unoPromptModal').classList.add('show');
+    renderGame(); beep('win');
+    await new Promise(resolve => {
+      let done = false;
+      const finish = (said) => {
+        if(done) return; done = true; clearInterval(timer);
+        $('#unoPromptModal').classList.remove('show');
+        $('#sayUnoNowBtn').onclick = null;
+        if(said || p.unoCalled){ p.unoCalled = true; toast(`${p.name}: UNO! Aman!`); beep('win'); }
+        else { drawOne(pIndex); drawOne(pIndex); toast(`${p.name} terlambat bilang UNO! Penalti ambil 2 kartu.`); beep('bad'); vibrate(80); }
+        renderGame(); resolve();
+      };
+      $('#sayUnoNowBtn').onclick = () => finish(true);
+      const timer = setInterval(() => {
+        left--; $('#unoTimerText').textContent = left;
+        if(left <= 0) finish(false);
+      }, 1000);
+    });
+    game.locked = false;
+  }
+
   async function playCard(pIndex, idx, chosenColor=null){
     game.locked = true;
     const p = game.players[pIndex];
@@ -683,6 +733,7 @@
     p.unoCalled = p.hand.length === 1 ? p.unoCalled : false;
     beep(card.type==='number'?'ok':'win'); renderGame();
     const steps = await applyAction(card, pIndex);
+    await showUnoPrompt(pIndex);
     if(checkWin(pIndex)) return;
     await endTurn(steps);
   }
@@ -709,7 +760,6 @@
   }
   function checkWin(pIndex){
     const p = game.players[pIndex];
-    if(p.hand.length===1 && !p.unoCalled){ toast(`${p.name} lupa UNO! Penalti ambil 2 kartu.`); drawOne(pIndex); drawOne(pIndex); renderGame(); return false; }
     if(p.hand.length===0){ endGame(pIndex); return true; }
     return false;
   }
@@ -773,6 +823,6 @@
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(console.warn); }
   renderHUD(); renderShop(); renderLeaderboard(); initFirebase(); setTimeout(()=>{ if(!player.nameSet) openProfile(); }, 800);
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f7c1b40fa7fe17',t:'MTc4NzQ2MzM1NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-</body>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8591d5a1b243f',t:'MTc4NzQ2OTU1Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
