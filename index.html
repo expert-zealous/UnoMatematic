@@ -786,17 +786,20 @@
     if(game.ended && !$('#endModal').classList.contains('show')) setTimeout(() => showEndResult(game.winnerIndex, false), 50);
     const turnPlayer = currentTurn();
     const online = game.mode?.type === 'online';
+    const aiMode = game.mode?.type === 'ai';
     const mineIdx = myPlayerIndex();
-    const cur = online ? (game.players[mineIdx] || turnPlayer) : turnPlayer;
-    const myTurn = !online || mineIdx === game.turnIndex;
+    // Mode AI harus selalu menampilkan kartu pemain manusia, bukan kartu AI saat giliran AI.
+    const displayIndex = online ? mineIdx : (aiMode ? 0 : game.turnIndex);
+    const cur = game.players[displayIndex] || turnPlayer;
+    const myTurn = online ? mineIdx === game.turnIndex : (aiMode ? game.turnIndex === 0 : true);
     const privacy = !!(game.privacy && game.mode.type === 'local' && !cur.ai);
-    const opponents = game.players.map((p,i)=>({p,i})).filter(x=>x.i!==(online ? mineIdx : game.turnIndex));
-    $('#opponentTitle').textContent = online ? '🌐 Mode Online' : (game.mode.type==='ai' ? '🤖 Lawan AI' : `👥 ${game.players.length} Pemain Lokal`);
+    const opponents = game.players.map((p,i)=>({p,i})).filter(x=>x.i!==displayIndex);
+    $('#opponentTitle').textContent = online ? '🌐 Mode Online' : (aiMode ? '🤖 Lawan AI' : `👥 ${game.players.length} Pemain Lokal`);
     $('#aiCount').textContent = opponents.reduce((sum,x)=>sum+x.p.hand.length,0);
     $('#playerCount').textContent = cur?.hand?.length || 0; $('#scoreText').textContent = game.scoreThis;
-    $('#currentPlayerName').textContent = privacy ? 'Kartu terkunci' : (online ? 'Kamu' : (cur.ai ? cur.name : (game.mode.type==='local' ? cur.name : 'Kamu')));
+    $('#currentPlayerName').textContent = privacy ? 'Kartu terkunci' : (online ? 'Kamu' : (aiMode ? 'Kamu' : (game.mode.type==='local' ? cur.name : 'Kamu')));
     $('#playerAvatar').textContent = cur?.emoji || '🙂';
-    $('#turnText').textContent = privacy ? 'Pass HP' : (online ? (myTurn ? 'Giliranmu' : `Giliran ${turnPlayer.name}`) : (cur.ai ? 'Giliran AI' : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`));
+    $('#turnText').textContent = privacy ? 'Pass HP' : (online ? (myTurn ? 'Giliranmu' : `Giliran ${turnPlayer.name}`) : (aiMode ? (myTurn ? 'Giliranmu' : 'Giliran AI') : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`));
     $('#turnText').classList.toggle('bg-emerald-500/50', !cur?.ai && myTurn && !privacy);
     $('#unoBtn').classList.toggle('uno-hot', !cur?.ai && myTurn && (cur?.hand?.length || 0) <= 2);
     $('#aiHand').innerHTML = opponents.map(({p,i})=>`<div class="glass rounded-2xl px-2 py-1 min-w-[64px] text-center"><div class="text-lg">${p.emoji}</div><div class="text-[10px] font-black truncate">${p.name}</div><div class="flex justify-center gap-[2px] mt-1">${p.hand.slice(0,5).map(()=>'<div class="card small back"><span></span></div>').join('')}</div><div class="text-[10px] font-black mt-1">${p.hand.length} kartu</div></div>`).join('');
@@ -818,8 +821,8 @@
     const c = drawOne(pIndex); renderGame(); toast(`${game.players[pIndex].name} ambil kartu ${c.label}.`); playSound('draw') || beep(); await endTurn(1);
   };
   $('#unoBtn').onclick = ()=>{
-    if(!game || !isMyOnlineTurn()) return toast('Belum giliranmu 😄');
-    const pIndex = myPlayerIndex(); const p = game.players[pIndex];
+    if(!game || !isMyOnlineTurn() || (game.mode?.type === 'ai' && game.turnIndex !== 0)) return toast('Belum giliranmu 😄');
+    const pIndex = game.mode?.type === 'ai' ? 0 : myPlayerIndex(); const p = game.players[pIndex];
     if(p && !p.ai && p.hand.length<=2){
       p.unoCalled=true;
       $('#unoPromptModal').classList.remove('show');
@@ -1008,5 +1011,5 @@
   renderHUD(); renderShop(); renderLeaderboard(); initFirebase(); setTimeout(()=>{ if(!player.nameSet) openProfile(); }, 800);
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f8aeb8fa7c1b28',t:'MTc4NzQ3MzA2Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f90dfbae98fdf7',t:'MTc4NzQ3Njk2NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
