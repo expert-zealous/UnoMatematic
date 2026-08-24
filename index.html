@@ -59,7 +59,9 @@
     .card.yellow { background: linear-gradient(145deg,#ffd646,#f59e0b); }
     .card.green { background: linear-gradient(145deg,#35e877,#16a34a); }
     .card.blue { background: linear-gradient(145deg,#34c4ff,#2563eb); }
-    .card.black { background: linear-gradient(145deg,#1f2937,#020617); }
+    .card.black { background: linear-gradient(145deg,#111827,#020617); }
+    .card.black::before { inset:10px; border-radius:50%; background: conic-gradient(from -35deg, #ef4444 0 25%, #facc15 0 50%, #22c55e 0 75%, #2563eb 0 100%); border:2px solid rgba(255,255,255,.95); transform: rotate(-18deg); box-shadow: inset 0 0 0 3px rgba(0,0,0,.18), 0 0 12px rgba(255,255,255,.16); }
+    .card.black > span { background:rgba(0,0,0,.55); border-radius:999px; padding:.06em .28em; }
     .hand { display:flex; overflow-x:auto; overflow-y:visible; gap:8px; padding: 14px 18px 20px; scrollbar-width:none; scroll-snap-type:x proximity; }
     .hand::-webkit-scrollbar{ display:none; }
     .hand .card { scroll-snap-align:center; transition: transform .18s ease, filter .18s ease; }
@@ -92,7 +94,7 @@
         <span class="text-xl">💎</span><span id="diamondText">0</span>
       </div>
       <button id="profilePill" class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black max-w-[190px] active:scale-95">
-        <span id="avatarText" class="text-xl">🐱</span><span id="nameText" class="truncate">Player</span> <span id="rankMini" class="text-[10px] bg-yellow-300/25 rounded-full px-2 py-1">Rookie</span>
+        <span id="avatarBadge" class="w-8 h-8 rounded-full bg-white/20 border border-white/30 overflow-hidden flex items-center justify-center text-xl shrink-0">🐱</span><span id="nameText" class="truncate">Player</span> <span id="rankMini" class="text-[10px] bg-yellow-300/25 rounded-full px-2 py-1">Rookie</span>
       </button>
     </header>
 
@@ -415,7 +417,7 @@
 
     // 5 karakter PNG baru. Simpan gambar sesuai file ini di assets/characters/.
     { id:'tora', name:'Tora', gender:'Cowok Harimau', emoji:'🐯', image:'assets/characters/tora.png', price:450, power:'Tiger combo + strategi agresif' },
-    { id:'aiko', name:'Aiko', gender:'Cewek Axolotl', emoji:'🩷', image:'assets/characters/aiko.png', price:450, power:'Calm math + lucky draw' },
+    { id:'aiko', name:'Princes', gender:'Cewek Axolotl', emoji:'🩷', image:'assets/characters/aiko.png', price:450, power:'Calm math + lucky draw' },
     { id:'kenzo', name:'Kenzo', gender:'Cowok Ninja Shiba', emoji:'🐶', image:'assets/characters/kenzo.png', price:550, power:'Ninja skip master' },
     { id:'yuna', name:'Yuna', gender:'Cewek Penyihir Bulan', emoji:'🌙', image:'assets/characters/yuna.png', price:550, power:'Moon wild boost' },
     { id:'nova', name:'Nova', gender:'Robot Bintang', emoji:'🤖', image:'assets/characters/nova.png', price:700, power:'Ultra logic calculation' },
@@ -451,7 +453,7 @@
   // ===================== AUDIO MANAGER =====================
   // Siapkan file audio Anda dengan nama berikut:
   // assets/audio/menu-music.mp3, game-music.mp3, click.mp3, card.mp3,
-  // success.mp3, error.mp3, win.mp3, draw.mp3
+  // success.mp3, error.mp3, win.mp3, draw.mp3, uno.mp3
   const audio = {
     unlocked: false,
     currentMusic: null,
@@ -465,7 +467,8 @@
       win: new Audio('assets/audio/win.mp3'),
       bad: new Audio('assets/audio/error.mp3'),
       success: new Audio('assets/audio/success.mp3'),
-      draw: new Audio('assets/audio/draw.mp3')
+      draw: new Audio('assets/audio/draw.mp3'),
+      uno: new Audio('assets/audio/uno.mp3')
     }
   };
   Object.values(audio.tracks).forEach(a => { a.loop = true; a.volume = .34; a.preload = 'auto'; });
@@ -559,10 +562,18 @@
     return `<div class="w-14 h-14 rounded-full bg-white/18 border-2 border-white/35 flex items-center justify-center text-4xl shrink-0 shadow-soft">${row.emoji || '🙂'}</div>`;
   }
 
+  function profileAvatarHtml(c){
+    if(c.image){
+      return `<img src="${c.image}" alt="${c.name}" class="w-full h-full object-cover object-top scale-125" onerror="this.style.display='none';this.parentElement.textContent='${c.emoji}'" />`;
+    }
+    return c.emoji;
+  }
+
   function renderHUD(){
+    const ch = currentChar();
     $('#diamondText').textContent = player.diamonds;
-    $('#avatarText').textContent = currentChar().emoji;
-    $('#playerAvatar').textContent = currentChar().emoji;
+    $('#avatarBadge').innerHTML = profileAvatarHtml(ch);
+    $('#playerAvatar').textContent = ch.emoji;
     $('#nameText').textContent = player.nameSet ? player.name : 'Login';
     $('#rankMini').textContent = getRank().name;
     $('#menuRankText').textContent = rankLabel();
@@ -836,7 +847,7 @@
     if(p && !p.ai && p.hand.length<=2){
       p.unoCalled=true;
       $('#unoPromptModal').classList.remove('show');
-      toast(`${p.name}: UNO!`); beep('win'); vibrate(30); renderGame(); syncOnlineGame();
+      toast(`${p.name}: UNO!`); playSound('uno') || beep('win'); vibrate(30); renderGame(); syncOnlineGame();
     }
     else toast('Belum waktunya UNO 😄');
   };
@@ -863,14 +874,14 @@
     $('#unoPromptText').textContent = `${p.name}, kartu kamu tinggal satu. Tekan BILANG UNO sebelum waktu habis!`;
     $('#unoTimerText').textContent = left;
     $('#unoPromptModal').classList.add('show');
-    renderGame(); beep('win');
+    renderGame(); playSound('uno') || beep('win');
     await new Promise(resolve => {
       let done = false;
       const finish = (said) => {
         if(done) return; done = true; clearInterval(timer);
         $('#unoPromptModal').classList.remove('show');
         $('#sayUnoNowBtn').onclick = null;
-        if(said || p.unoCalled){ p.unoCalled = true; toast(`${p.name}: UNO! Aman!`); beep('win'); }
+        if(said || p.unoCalled){ p.unoCalled = true; toast(`${p.name}: UNO! Aman!`); playSound('uno') || beep('win'); }
         else { drawOne(pIndex); drawOne(pIndex); toast(`${p.name} terlambat bilang UNO! Penalti ambil 2 kartu.`); beep('bad'); vibrate(80); }
         renderGame(); resolve();
       };
@@ -1021,5 +1032,5 @@
   renderHUD(); renderShop(); renderLeaderboard(); initFirebase(); setTimeout(()=>{ if(!player.nameSet) openProfile(); }, 800);
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2ff56799da140f5',t:'MTc4NzU0Mjg0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a301e0d848ee2328',t:'MTc4NzU2OTQ4OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

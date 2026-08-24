@@ -85,3 +85,15 @@ Short card draw sound effect, quick paper slide with cute pop, casual mobile car
 ```
 
 Catatan: Browser biasanya hanya mengizinkan musik setelah pemain menyentuh layar pertama kali. Kode sudah dibuat otomatis mulai musik setelah tap pertama.
+
+
+### 9. Suara UNO
+```txt
+assets/audio/uno.mp3
+```
+Prompt/arah sound:
+```txt
+Short excited child friendly voice shout saying UNO, cheerful mobile card game style, energetic, cute, clean audio, under 1 second, no background music
+```
+
+Catatan: jika ingin memakai suara manusia sendiri, rekam kata “UNO!” lalu simpan sebagai `uno.mp3`.

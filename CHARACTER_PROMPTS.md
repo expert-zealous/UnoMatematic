@@ -18,13 +18,13 @@ Rekomendasi ukuran: **1024x1024 PNG transparan**, karakter full body atau half b
 Cute chibi anime tiger boy mascot, orange tiger ears and tail, sporty red hoodie, friendly brave smile, holding colorful UNO math cards, blue diamond accessory, vibrant mobile game character, glossy kawaii style, full body, transparent background, high quality PNG, no text, no logo
 ```
 
-## 2. Aiko
+## 2. Princes
 - File: `assets/characters/aiko.png`
 - Harga di game: 450 Diamond Biru
 - Prompt gambar:
 
 ```txt
-Adorable chibi anime axolotl girl mascot, pastel pink hair, tiny axolotl gills, aqua school outfit, cheerful expression, holding a calculator and colorful cards, blue diamond sparkle, cute kawaii mobile game style, full body, transparent background, high quality PNG, no text, no logo
+Adorable chibi anime princess axolotl girl mascot, pastel pink hair, tiny axolotl gills, aqua school outfit, cheerful expression, holding a calculator and colorful cards, blue diamond sparkle, cute kawaii mobile game style, full body, transparent background, high quality PNG, no text, no logo
 ```
 
 ## 3. Kenzo
