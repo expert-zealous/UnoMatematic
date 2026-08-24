@@ -549,6 +549,16 @@
     }
     return `<div class="${size} bg-white/15 rounded-[24px] py-4">${c.emoji}</div>`;
   }
+  function leaderboardFace(row){
+    if(row.image){
+      return `<div class="w-14 h-14 rounded-full bg-white/18 border-2 border-white/35 overflow-hidden flex items-center justify-center shrink-0 shadow-soft">
+        <img src="${row.image}" alt="${row.name}" class="w-full h-full object-cover object-top scale-125" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+        <div class="hidden w-full h-full items-center justify-center text-3xl">${row.emoji || '🙂'}</div>
+      </div>`;
+    }
+    return `<div class="w-14 h-14 rounded-full bg-white/18 border-2 border-white/35 flex items-center justify-center text-4xl shrink-0 shadow-soft">${row.emoji || '🙂'}</div>`;
+  }
+
   function renderHUD(){
     $('#diamondText').textContent = player.diamonds;
     $('#avatarText').textContent = currentChar().emoji;
@@ -724,19 +734,19 @@
   }
   async function renderLeaderboard(){
     const list = $('#leaderboardList');
-    let rows = [{ name: player.name+' (Kamu)', score: player.bestScore || 0, diamonds: player.diamonds, emoji: currentChar().emoji, rank:rankLabel(player.bestScore || 0) }];
+    let rows = [{ name: player.name+' (Kamu)', score: player.bestScore || 0, diamonds: player.diamonds, emoji: currentChar().emoji, image: currentChar().image, selected: currentChar().id, rank:rankLabel(player.bestScore || 0) }];
     if(firebaseReady){
       try {
         const q = window.fb.query(window.fb.collection(db,'players'), window.fb.orderBy('bestScore','desc'), window.fb.limit(8));
         const snap = await window.fb.getDocs(q);
-        rows = snap.docs.map((d,i)=>{ const p=d.data(); const ch=characters.find(c=>c.id===p.selected)||characters[0]; return { name:p.name||'Player', score:p.bestScore||0, diamonds:p.diamonds||0, emoji:ch.emoji, rank:rankLabel(p.bestScore||0) }; });
+        rows = snap.docs.map((d,i)=>{ const p=d.data(); const ch=characters.find(c=>c.id===p.selected)||characters[0]; return { name:p.name||'Player', score:p.bestScore||0, diamonds:p.diamonds||0, emoji:ch.emoji, image:ch.image, selected:ch.id, rank:rankLabel(p.bestScore||0) }; });
       } catch(e){ console.warn('leaderboard failed', e); }
     }
     if(rows.length < 4) rows = rows.concat([
-      {name:'AI Koko', score:850, diamonds:190, emoji:'🤖', rank:rankLabel(850)}, {name:'Nami Pro', score:720, diamonds:140, emoji:'🐰', rank:rankLabel(720)}, {name:'Raka Math', score:610, diamonds:99, emoji:'🦊', rank:rankLabel(610)}
+      {name:'AI Koko', score:850, diamonds:190, emoji:'🤖', selected:'nova', rank:rankLabel(850)}, {name:'Nami Pro', score:720, diamonds:140, emoji:'🐰', selected:'nami', rank:rankLabel(720)}, {name:'Raka Math', score:610, diamonds:99, emoji:'🦊', selected:'raka', rank:rankLabel(610)}
     ]);
     list.innerHTML = rows.slice(0,8).map((r,i)=>`<div class="glass rounded-3xl p-4 flex items-center gap-3">
-      <div class="text-2xl font-black w-8">#${i+1}</div><div class="text-4xl">${r.emoji}</div><div class="flex-1"><div class="font-black">${r.name}</div><div class="text-xs opacity-85 font-bold">${r.diamonds} 💎 • ${r.rank || rankLabel(r.score)}</div></div><div class="font-black text-xl">${r.score}</div>
+      <div class="text-2xl font-black w-8">#${i+1}</div>${leaderboardFace(r)}<div class="flex-1 min-w-0"><div class="font-black truncate">${r.name}</div><div class="text-xs opacity-85 font-bold">${r.diamonds} 💎 • ${r.rank || rankLabel(r.score)}</div><div class="text-[10px] opacity-70 font-black">Karakter: ${characters.find(c=>c.id===r.selected)?.name || 'Default'}</div></div><div class="font-black text-xl">${r.score}</div>
     </div>`).join('');
   }
   $('#saveSettings').onclick = async()=>{ player.name = $('#playerNameInput').value.trim() || 'Player'; player.nameSet = player.name !== 'Player'; player.sound = $('#soundToggle').checked; saveLocal(); setMusicForScreen($('.screen.active')?.id || 'menuScreen'); await saveCloudPlayer(); beep(); };
@@ -1011,5 +1021,5 @@
   renderHUD(); renderShop(); renderLeaderboard(); initFirebase(); setTimeout(()=>{ if(!player.nameSet) openProfile(); }, 800);
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2f90dfbae98fdf7',t:'MTc4NzQ3Njk2NQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a2ff56799da140f5',t:'MTc4NzU0Mjg0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
