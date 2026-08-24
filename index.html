@@ -93,8 +93,8 @@
       <div class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black">
         <span class="text-xl">💎</span><span id="diamondText">0</span>
       </div>
-      <button id="profilePill" class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black max-w-[190px] active:scale-95">
-        <span id="avatarBadge" class="w-8 h-8 rounded-full bg-white/20 border border-white/30 overflow-hidden flex items-center justify-center text-xl shrink-0">🐱</span><span id="nameText" class="truncate">Player</span> <span id="rankMini" class="text-[10px] bg-yellow-300/25 rounded-full px-2 py-1">Rookie</span>
+      <button id="profilePill" class="hud-pill px-3 py-2 flex items-center gap-2 text-sm font-black max-w-[168px] active:scale-95">
+        <span id="avatarBadge" class="w-8 h-8 rounded-full bg-white/20 border border-white/30 overflow-hidden flex items-center justify-center text-xl shrink-0">🐱</span><span id="nameText" class="truncate">Player</span> <span id="rankMini" class="text-[13px] bg-yellow-300/25 rounded-full px-2 py-1 leading-none">Rookie</span>
       </button>
     </header>
 
@@ -186,7 +186,7 @@
     </section>
 
     <!-- GAME -->
-    <section id="gameScreen" class="screen flex flex-col pt-[calc(var(--safe-top)+58px)] pb-[calc(var(--safe-bottom)+0px)]">
+    <section id="gameScreen" class="screen flex flex-col pt-[calc(var(--safe-top)+124px)] pb-[calc(var(--safe-bottom)+18px)]">
       <div class="px-4 flex items-center justify-between z-10">
         <div class="hud-pill px-3 py-2 text-xs font-black">Level: <span id="levelText">Mudah</span></div>
         <div id="turnText" class="hud-pill px-4 py-2 text-sm font-black bg-white/20">Giliranmu</div>
@@ -218,7 +218,7 @@
 
         <div class="w-full">
           <div class="px-4 flex items-center justify-between">
-            <div class="font-black text-sm"><span id="playerAvatar">🐱</span> <span id="currentPlayerName">Kamu</span></div><div class="text-sm font-black"><span id="playerCount">7</span> kartu</div>
+            <div class="font-black text-sm"><span id="playerAvatar" class="inline-flex w-7 h-7 rounded-full bg-white/15 border border-white/30 overflow-hidden items-center justify-center align-middle text-base">🐱</span> <span id="currentPlayerName">Kamu</span></div><div class="text-sm font-black"><span id="playerCount">7</span> kartu</div>
           </div>
           <div id="playerHand" class="hand"></div>
         </div>
@@ -573,9 +573,9 @@
     const ch = currentChar();
     $('#diamondText').textContent = player.diamonds;
     $('#avatarBadge').innerHTML = profileAvatarHtml(ch);
-    $('#playerAvatar').textContent = ch.emoji;
+    $('#playerAvatar').innerHTML = profileAvatarHtml(ch);
     $('#nameText').textContent = player.nameSet ? player.name : 'Login';
-    $('#rankMini').textContent = getRank().name;
+    $('#rankMini').textContent = getRank().emoji;
     $('#menuRankText').textContent = rankLabel();
     $('#playerNameInput').value = player.name;
     $('#soundToggle').checked = player.sound;
@@ -643,7 +643,7 @@
   // ===================== ONLINE ROOM (FIREBASE) =====================
   const roomRef = (code) => window.fb.doc(db, 'rooms', code);
   const makeRoomCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
-  function myOnlineMember(){ return { uid:userId, name: player.nameSet ? player.name : 'Player', emoji: currentChar().emoji, selected: player.selected }; }
+  function myOnlineMember(){ const ch=currentChar(); return { uid:userId, name: player.nameSet ? player.name : 'Player', emoji: ch.emoji, image: ch.image || null, selected: player.selected }; }
   function requireOnlineReady(){
     if(!firebaseReady || !userId){ alert('Firebase belum online. Pastikan internet aktif dan Anonymous Auth/Firestore sudah aktif.'); return false; }
     if(!player.nameSet){ openProfile(); return false; }
@@ -703,7 +703,7 @@
     const members = onlineRoom.members || [];
     if(members.length < 2) return alert('Minimal 2 pemain untuk mulai online.');
     let deck = buildDeck(); let discard = deck.pop(); while(discard.color==='black'){ deck.unshift(discard); discard = deck.pop(); }
-    const players = members.slice(0, onlineRoom.maxPlayers).map((m,i)=>({ uid:m.uid, name:m.name||`Pemain ${i+1}`, emoji:m.emoji||'🙂', ai:false, hand:deck.splice(0,7), unoCalled:false }));
+    const players = members.slice(0, onlineRoom.maxPlayers).map((m,i)=>{ const ch=characters.find(c=>c.id===m.selected); return { uid:m.uid, name:m.name||`Pemain ${i+1}`, emoji:m.emoji||ch?.emoji||'🙂', image:m.image||ch?.image||null, selected:m.selected||ch?.id||null, ai:false, hand:deck.splice(0,7), unoCalled:false }; });
     game = { diff, mode:{type:'online', count:players.length}, roomId:onlineRoomId, deck, discard:[discard], currentColor:discard.color, players, turnIndex:0, direction:1, scoreThis:0, locked:false, privacy:false };
     await syncOnlineGame(); showScreen('gameScreen'); renderGame(); toast('Game online dimulai!');
   }
@@ -783,6 +783,8 @@
     return Array.from({length: count}, (_,i) => ({
       name: i===0 ? player.name : (selectedMode.type==='ai' && i===1 ? 'AI Koko' : localNames[i]),
       emoji: i===0 ? chosen.emoji : emojis[i % emojis.length],
+      image: i===0 ? chosen.image : null,
+      selected: i===0 ? chosen.id : null,
       ai: selectedMode.type==='ai' && i===1,
       hand: deck.splice(0,7),
       unoCalled: false
@@ -819,7 +821,7 @@
     $('#aiCount').textContent = opponents.reduce((sum,x)=>sum+x.p.hand.length,0);
     $('#playerCount').textContent = cur?.hand?.length || 0; $('#scoreText').textContent = game.scoreThis;
     $('#currentPlayerName').textContent = privacy ? 'Kartu terkunci' : (online ? 'Kamu' : (aiMode ? 'Kamu' : (game.mode.type==='local' ? cur.name : 'Kamu')));
-    $('#playerAvatar').textContent = cur?.emoji || '🙂';
+    $('#playerAvatar').innerHTML = cur?.image ? `<img src="${cur.image}" alt="${cur.name}" class="w-full h-full object-cover object-top scale-125" onerror="this.style.display='none';this.parentElement.textContent='${cur.emoji || '🙂'}'" />` : (cur?.emoji || '🙂');
     $('#turnText').textContent = privacy ? 'Pass HP' : (online ? (myTurn ? 'Giliranmu' : `Giliran ${turnPlayer.name}`) : (aiMode ? (myTurn ? 'Giliranmu' : 'Giliran AI') : `Giliran ${game.mode.type==='local'?cur.name:'Kamu'}`));
     $('#turnText').classList.toggle('bg-emerald-500/50', !cur?.ai && myTurn && !privacy);
     $('#unoBtn').classList.toggle('uno-hot', !cur?.ai && myTurn && (cur?.hand?.length || 0) <= 2);
@@ -874,7 +876,7 @@
     $('#unoPromptText').textContent = `${p.name}, kartu kamu tinggal satu. Tekan BILANG UNO sebelum waktu habis!`;
     $('#unoTimerText').textContent = left;
     $('#unoPromptModal').classList.add('show');
-    renderGame(); playSound('uno') || beep('win');
+    renderGame(); vibrate(35);
     await new Promise(resolve => {
       let done = false;
       const finish = (said) => {
@@ -1032,5 +1034,5 @@
   renderHUD(); renderShop(); renderLeaderboard(); initFirebase(); setTimeout(()=>{ if(!player.nameSet) openProfile(); }, 800);
 </script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f"}' crossorigin="anonymous"></script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a301e0d848ee2328',t:'MTc4NzU2OTQ4OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a30283a9dfbcf8fa',t:'MTc4NzU3NjE1Nw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
