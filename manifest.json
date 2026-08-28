@@ -1,6 +1,6 @@
 {
   "name": "UNO Matematika",
-  "short_name": "UNO Math",
+  "short_name": "UnoMatematic",
   "description": "Game UNO + tantangan matematika dengan karakter kawaii dan Diamond Biru.",
   "start_url": "./index.html",
   "scope": "./",
